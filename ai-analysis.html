@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 分析</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #F7F8FA;
+        }
+        .container {
+            max-width: 430px;
+            margin: 0 auto;
+            background: #F7F8FA;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .nav {
+            background: white;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-title {
+            flex: 1;
+            text-align: center;
+            font-size: 17px;
+            font-weight: 600;
+            color: #1F2D3D;
+        }
+        .chat {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+        .message {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease-out;
+        }
+        .message.user {
+            flex-direction: row-reverse;
+        }
+        .message.user .message-content {
+            text-align: right;
+        }
+        .message.user .message-text {
+            background: #EB3223;
+            color: white;
+            border-radius: 16px 16px 4px 16px;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #EB3223 0%, #FF6B6B 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .message-content {
+            max-width: calc(100% - 46px);
+        }
+        .message-text {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 16px 16px 16px 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            font-size: 15px;
+            line-height: 1.6;
+            color: #1F2D3D;
+        }
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-top: 4px;
+        }
+        .section-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F2D3D;
+            margin-bottom: 12px;
+        }
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 13px;
+        }
+        .data-label {
+            color: #8A8F99;
+        }
+        .data-value {
+            font-weight: 600;
+            color: #1F2D3D;
+        }
+        .success { color: #4CAF50; }
+        .danger { color: #F44336; }
+        .divider {
+            height: 1px;
+            background: #E5E8EB;
+            margin: 12px 0;
+        }
+        .btn {
+            background: #EB3223;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background: #d42a1c;
+        }
+        /* 表单样式 */
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-top: 4px;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #1F2D3D;
+            margin-bottom: 6px;
+        }
+        .form-select, .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #EDEFF2;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1F2D3D;
+            background: white;
+        }
+        .form-select:focus, .form-input:focus {
+            outline: none;
+            border-color: #EB3223;
+        }
+        /* 账单检查列表 */
+        .bill-checklist {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 12px 0;
+        }
+        .bill-check-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: #F7F8FA;
+            border-radius: 8px;
+            border: 1px solid #EDEFF2;
+        }
+        .bill-check-item input[type="checkbox"] {
+            margin-top: 4px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .bill-info {
+            flex: 1;
+            cursor: pointer;
+        }
+        .bill-platform {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F2D3D;
+            margin-bottom: 4px;
+        }
+        .bill-details {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .bill-amount {
+            font-size: 14px;
+            font-weight: 600;
+            color: #EB3223;
+        }
+        .bill-due {
+            font-size: 12px;
+            color: #8A8F99;
+        }
+        .bill-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1F2D3D;
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            background: #F7F8FA;
+            border-radius: 6px;
+        }
+        .form-note {
+            font-size: 12px;
+            color: #8A8F99;
+            margin-top: 8px;
+            padding-left: 4px;
+        }
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #F7F8FA;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .detail-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1F2D3D;
+        }
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .detail-value.income {
+            color: #4CAF50;
+        }
+        .detail-value.expense {
+            color: #EB3223;
+        }
+        .detail-item.total {
+            background: white;
+            border: 2px solid #EDEFF2;
+            margin-top: 8px;
+        }
+        .detail-value-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .detail-sub {
+            font-size: 11px;
+            color: #8A8F99;
+        }
+        /* 新增收入项样式 */
+        .new-income-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: #F0FFF4;
+            border-radius: 6px;
+            border: 1px solid #E8F5E9;
+        }
+        .new-income-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        .new-income-type {
+            font-size: 13px;
+            font-weight: 500;
+            color: #1F2D3D;
+        }
+        .new-income-amount {
+            font-size: 13px;
+            font-weight: 600;
+            color: #4CAF50;
+        }
+        .new-income-date {
+            font-size: 11px;
+            color: #8A8F99;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .remove-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #EB3223;
+            cursor: pointer;
+            padding: 0 4px;
+            font-weight: 600;
+            line-height: 1;
+        }
+        .remove-btn:hover {
+            color: #D32F2F;
+        }
+        /* 报告模块样式 */
+        .report-section {
+            margin-bottom: 16px;
+        }
+        .report-section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1F2D3D;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #EB3223;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+        .badge-green {
+            background: #E8F5E9;
+            color: #4CAF50;
+        }
+        .badge-orange {
+            background: #FFF3E0;
+            color: #FF9800;
+        }
+        .badge-red {
+            background: #FFEBEE;
+            color: #F44336;
+        }
+        .badge-yellow {
+            background: #FFFDE7;
+            color: #FBC02D;
+        }
+        .priority-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .priority-high {
+            background: #FFEBEE;
+            border-color: #F44336;
+        }
+        .priority-medium {
+            background: #FFF3E0;
+            border-color: #FF9800;
+        }
+        .priority-low {
+            background: #E8F5E9;
+            border-color: #4CAF50;
+        }
+        .priority-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .priority-platform {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F2D3D;
+        }
+        .priority-amount {
+            font-size: 15px;
+            font-weight: 700;
+            color: #EB3223;
+        }
+        .priority-reason {
+            font-size: 12px;
+            color: #8A8F99;
+            line-height: 1.5;
+        }
+        .credit-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: #F7F8FA;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .credit-platform {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F2D3D;
+        }
+        .credit-details {
+            font-size: 12px;
+            color: #8A8F99;
+        }
+        .strategy-card {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .strategy-green {
+            background: #E8F5E9;
+            border-color: #4CAF50;
+        }
+        .strategy-orange {
+            background: #FFF3E0;
+            border-color: #FF9800;
+        }
+        .suggestion-item {
+            display: flex;
+            gap: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+        }
+        .suggestion-blue {
+            background: #E3F2FD;
+        }
+        .suggestion-yellow {
+            background: #FFFDE7;
+        }
+        .suggestion-purple {
+            background: #F3E5F5;
+        }
+        .suggestion-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .suggestion-text {
+            font-size: 13px;
+            color: #1F2D3D;
+            line-height: 1.5;
+        }
+        .improvement-box {
+            background: linear-gradient(135deg, #E8F5E9 0%, #FFFFFF 100%);
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+        .improvement-highlight {
+            font-size: 15px;
+            font-weight: 600;
+            color: #4CAF50;
+            margin-bottom: 8px;
+        }
+        .improvement-list {
+            font-size: 13px;
+            color: #1F2D3D;
+            line-height: 1.8;
+        }
+        .improvement-list li {
+            margin-bottom: 6px;
+        }
+        /* 输入框样式 */
+        .input-area {
+            background: white;
+            padding: 12px 16px;
+            border-top: 1px solid #EDEFF2;
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        .chat-input {
+            width: 100%;
+            min-height: 44px;
+            max-height: 120px;
+            padding: 12px;
+            border: 1px solid #EDEFF2;
+            border-radius: 22px;
+            font-size: 15px;
+            color: #1F2D3D;
+            background: #F7F8FA;
+            resize: none;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .chat-input:focus {
+            background: white;
+            border-color: #EB3223;
+        }
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #EB3223;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .send-btn:hover {
+            background: #d42a1c;
+        }
+        .send-btn:disabled {
+            background: #E5E8EB;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <button onclick="goToIndex()" style="background:none;border:none;font-size:18px;color:#1F2D3D;cursor:pointer;padding:4px 8px;">←</button>
+            <div class="nav-title">AI 分析</div>
+            <div style="width:36px;"></div>
+        </nav>
+        <div class="chat" id="chatContainer"></div>
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea 
+                    id="chatInput" 
+                    class="chat-input" 
+                    placeholder="输入问题..." 
+                    rows="1"
+                    onkeydown="handleKeyDown(event)"
+                ></textarea>
+            </div>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        // 返回首页
+        function goToIndex() {
+            window.location.href = 'index.html';
+        }
+
+        // 页面加载后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initAnalysis();
+        });
+
+        function initAnalysis() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const auto = urlParams.get('auto');
+
+            if (auto === 'true') {
+                autoShowReport();
+            } else {
+                showWelcome();
+            }
+        }
+
+        function showWelcome() {
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML = `
+                <div class="message">
+                    <div class="avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            你好！我是你的AI财务助手 😊<br><br>
+                            我可以帮你生成财务分析报告。<br><br>
+                            让我先确认一下你的账单情况...
+                        </div>
+                    </div>
+                </div>
+            `;
+            setTimeout(() => {
+                showBillsConfirmation();
+            }, 500);
+        }
+
+        function autoShowReport() {
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML = `
+                <div class="message">
+                    <div class="avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            你好！我是你的AI财务助手 😊<br><br>
+                            正在自动生成分析报告...
+                        </div>
+                    </div>
+                </div>
+            `;
+            setTimeout(() => {
+                showFullAnalysisReport();
+            }, 500);
+        }
+
+        function showBillsConfirmation() {
+            const chatContainer = document.getElementById('chatContainer');
+
+            const billsHTML = `
+                <div class="message">
+                    <div class="avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            我找到了你的<strong>账单明细</strong>，请确认哪些账单已经还款：
+                        </div>
+                        <div class="form-card">
+                            <div class="section-header">📋 账单确认</div>
+
+                            <!-- 逾期账单 -->
+                            <div style="margin-bottom: 16px;">
+                                <div class="bill-section-title">🔴 逾期账单（已过截止日期）</div>
+                                <div class="bill-checklist">
+                                    <div class="bill-check-item">
+                                        <input type="checkbox" id="overdue1" class="bill-checkbox">
+                                        <label for="overdue1" class="bill-info">
+                                            <div class="bill-platform">Akulaku</div>
+                                            <div class="bill-details">
+                                                <span class="bill-amount">Rp 500,000</span>
+                                                <span class="bill-due">到期日：2024-01-05</span>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="bill-check-item">
+                                        <input type="checkbox" id="overdue2" class="bill-checkbox">
+                                        <label for="overdue2" class="bill-info">
+                                            <div class="bill-platform">Kredivo</div>
+                                            <div class="bill-details">
+                                                <span class="bill-amount">Rp 750,000</span>
+                                                <span class="bill-due">到期日：2024-01-03</span>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="bill-check-item">
+                                        <input type="checkbox" id="overdue3" class="bill-checkbox">
+                                        <label for="overdue3" class="bill-info">
+                                            <div class="bill-platform">Shopee Paylater</div>
+                                            <div class="bill-details">
+                                                <span class="bill-amount">Rp 300,000</span>
+                                                <span class="bill-due">到期日：2024-01-10</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-note">勾选表示已还款</div>
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <!-- 未到期账单 -->
+                            <div style="margin-bottom: 16px;">
+                                <div class="bill-section-title">🟢 未到期账单（本月内到期）</div>
+                                <div class="bill-checklist">
+                                    <div class="bill-check-item">
+                                        <input type="checkbox" id="upcoming1" class="bill-checkbox">
+                                        <label for="upcoming1" class="bill-info">
+                                            <div class="bill-platform">Kredivo 分期</div>
+                                            <div class="bill-details">
+                                                <span class="bill-amount">Rp 1,200,000</span>
+                                                <span class="bill-due">到期日：2024-01-20</span>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="bill-check-item">
+                                        <input type="checkbox" id="upcoming2" class="bill-checkbox">
+                                        <label for="upcoming2" class="bill-info">
+                                            <div class="bill-platform">Akulaku 分期</div>
+                                            <div class="bill-details">
+                                                <span class="bill-amount">Rp 800,000</span>
+                                                <span class="bill-due">到期日：2024-01-25</span>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="bill-check-item">
+                                        <input type="checkbox" id="upcoming3" class="bill-checkbox">
+                                        <label for="upcoming3" class="bill-info">
+                                            <div class="bill-platform">Indodana</div>
+                                            <div class="bill-details">
+                                                <span class="bill-amount">Rp 400,000</span>
+                                                <span class="bill-due">到期日：2024-01-28</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-note">勾选表示已提前还款</div>
+                            </div>
+
+                            <button class="btn" onclick="confirmBills()">确认</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            chatContainer.innerHTML += billsHTML;
+        }
+
+        function confirmBills() {
+            const chatContainer = document.getElementById('chatContainer');
+
+            // 收集账单状态
+            const overdueBills = [];
+            const upcomingBills = [];
+            const earlyRepaymentBills = [];
+
+            const overdue1 = document.getElementById('overdue1').checked;
+            const overdue2 = document.getElementById('overdue2').checked;
+            const overdue3 = document.getElementById('overdue3').checked;
+
+            if (overdue1) overdueBills.push('Akulaku');
+            if (overdue2) overdueBills.push('Kredivo');
+            if (overdue3) overdueBills.push('Shopee Paylater');
+
+            const upcoming1 = document.getElementById('upcoming1').checked;
+            const upcoming2 = document.getElementById('upcoming2').checked;
+            const upcoming3 = document.getElementById('upcoming3').checked;
+
+            if (upcoming1) earlyRepaymentBills.push('Kredivo 分期');
+            if (upcoming2) earlyRepaymentBills.push('Akulaku 分期');
+            if (upcoming3) earlyRepaymentBills.push('Indodana');
+
+            const overdueAmounts = {
+                'Akulaku': 500000,
+                'Kredivo': 750000,
+                'Shopee Paylater': 300000
+            };
+            const upcomingAmounts = {
+                'Kredivo 分期': 1200000,
+                'Akulaku 分期': 800000,
+                'Indodana': 400000
+            };
+
+            let paidAmount = 0;
+            overdueBills.forEach(bill => {
+                paidAmount += overdueAmounts[bill] || 0;
+            });
+            earlyRepaymentBills.forEach(bill => {
+                paidAmount += upcomingAmounts[bill] || 0;
+            });
+
+            sessionStorage.setItem('billsConfirmation', JSON.stringify({
+                overdueBills,
+                earlyRepaymentBills,
+                paidAmount
+            }));
+
+            const confirmHTML = `
+                <div class="message user">
+                    <div class="avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">我</div>
+                    <div class="message-content">
+                        <div class="message-text">确认账单</div>
+                    </div>
+                </div>
+            `;
+
+            chatContainer.innerHTML += confirmHTML;
+
+            const replyHTML = `
+                <div class="message">
+                    <div class="avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            好的，已记录你的账单状态。现在让我查看你本月的收入和支出情况...
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            chatContainer.innerHTML += replyHTML;
+            setTimeout(() => {
+                showIncomeExpenseConfirmation();
+            }, 500);
+        }
+
+        function showIncomeExpenseConfirmation() {
+            const chatContainer = document.getElementById('chatContainer');
+
+            const incomeExpenseHTML = `
+                <div class="message">
+                    <div class="avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            以下是你本月的<strong>收入和支出</strong>明细，请确认是否有变化：
+                        </div>
+                        <div class="form-card">
+                            <div class="section-header">💰 收入支出明细</div>
+
+                            <div style="margin-bottom: 16px;">
+                                <div class="section-title" style="font-size: 14px; font-weight: 600; margin-bottom: 10px;">收入明细</div>
+
+                                <div class="detail-item">
+                                    <div class="detail-label">之前结余</div>
+                                    <div class="detail-value income">Rp 1,500,000</div>
+                                </div>
+
+                                <div class="detail-item">
+                                    <div class="detail-label">工资</div>
+                                    <div class="detail-value-group">
+                                        <div class="detail-value income">Rp 7,000,000</div>
+                                        <div class="detail-sub">25号到账</div>
+                                    </div>
+                                </div>
+
+                                <div class="detail-item">
+                                    <div class="detail-label">奖金</div>
+                                    <div class="detail-value-group">
+                                        <div class="detail-value income">Rp 1,000,000</div>
+                                        <div class="detail-sub">25号到账</div>
+                                    </div>
+                                </div>
+
+                                <div class="detail-item total">
+                                    <div class="detail-label">收入合计</div>
+                                    <div class="detail-value income">Rp 9,500,000</div>
+                                </div>
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <div style="margin-bottom: 16px;">
+                                <div class="section-title" style="font-size: 14px; font-weight: 600; margin-bottom: 10px;">支出明细</div>
+
+                                <div class="detail-item">
+                                    <div class="detail-label">固定支出</div>
+                                    <div class="detail-value expense">Rp 4,000,000</div>
+                                </div>
+
+                                <div class="detail-item">
+                                    <div class="detail-label">大额支出</div>
+                                    <div class="detail-value expense">Rp 2,500,000</div>
+                                </div>
+
+                                <div class="detail-item total">
+                                    <div class="detail-label">支出合计</div>
+                                    <div class="detail-value expense">Rp 6,500,000</div>
+                                </div>
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <div class="form-group">
+                                <label class="form-label">本月的收入和支出与平常相比是否有变化？</label>
+                                <select class="form-select" id="confirmChanges">
+                                    <option value="no_change">没有变化</option>
+                                    <option value="income_changed">收入有变化</option>
+                                    <option value="expense_changed">支出有变化</option>
+                                    <option value="both_changed">收入和支出都有变化</option>
+                                </select>
+                            </div>
+
+                            <div id="incomeChangeDetails" style="display: none;">
+                                <div class="divider"></div>
+                                <div class="section-title" style="font-size: 14px; font-weight: 600;">收入变更</div>
+
+                                <div class="form-group">
+                                    <label class="form-label">之前结余</label>
+                                    <input type="number" class="form-input" id="changeBalance" placeholder="输入结余金额" value="1500000">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">工资（金额 + 到账日期）</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="number" class="form-input" id="changeSalary" placeholder="输入工资金额" value="7000000" style="flex: 2;">
+                                        <select class="form-select" id="changeSalaryDate" style="flex: 1;">
+                                            <option value="25号">25号</option>
+                                            <option value="1号">1号</option>
+                                            <option value="5号">5号</option>
+                                            <option value="10号">10号</option>
+                                            <option value="15号">15号</option>
+                                            <option value="20号">20号</option>
+                                            <option value="30号">30号</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">奖金（金额 + 到账日期）</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="number" class="form-input" id="changeBonus" placeholder="输入奖金金额" value="1000000" style="flex: 2;">
+                                        <select class="form-select" id="changeBonusDate" style="flex: 1;">
+                                            <option value="25号">25号</option>
+                                            <option value="1号">1号</option>
+                                            <option value="5号">5号</option>
+                                            <option value="10号">10号</option>
+                                            <option value="15号">15号</option>
+                                            <option value="20号">20号</option>
+                                            <option value="30号">30号</option>
+                                            <option value="无">无</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">其他收入（金额 + 到账日期）</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="number" class="form-input" id="changeOtherIncome" placeholder="输入其他收入金额" value="0" style="flex: 2;">
+                                        <select class="form-select" id="changeOtherIncomeDate" style="flex: 1;">
+                                            <option value="待确认">待确认</option>
+                                            <option value="1号">1号</option>
+                                            <option value="5号">5号</option>
+                                            <option value="10号">10号</option>
+                                            <option value="15号">15号</option>
+                                            <option value="20号">20号</option>
+                                            <option value="25号">25号</option>
+                                            <option value="30号">30号</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="divider"></div>
+                                <div class="section-title" style="font-size: 14px; font-weight: 600;">新增收入</div>
+
+                                <div class="form-group">
+                                    <label class="form-label">收入类型</label>
+                                    <select class="form-select" id="newIncomeType">
+                                        <option value="">请选择收入类型</option>
+                                        <option value="兼职">兼职收入</option>
+                                        <option value="投资">投资收益</option>
+                                        <option value="理财">理财收益</option>
+                                        <option value="副业">副业收入</option>
+                                        <option value="其他">其他收入</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">收入金额与到账时间</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="number" class="form-input" id="newIncomeAmount" placeholder="输入新增收入金额" style="flex: 2;">
+                                        <select class="form-select" id="newIncomeDate" style="flex: 1;">
+                                            <option value="已到账">已到账</option>
+                                            <option value="1号">1号</option>
+                                            <option value="5号">5号</option>
+                                            <option value="10号">10号</option>
+                                            <option value="15号">15号</option>
+                                            <option value="20号">20号</option>
+                                            <option value="25号">25号（工资日）</option>
+                                            <option value="30号">30号</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <button class="btn" style="margin-top: 8px; font-size: 14px; padding: 10px 16px;" onclick="addNewIncome()">+ 添加新增收入</button>
+
+                                <!-- 已添加的新增收入列表 -->
+                                <div id="newIncomeListContainer" style="display: none; margin-top: 12px;">
+                                    <div class="divider" style="margin: 8px 0;"></div>
+                                    <div class="section-title" style="font-size: 14px;">已添加的新增收入</div>
+                                    <div id="newIncomeItems" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                                </div>
+                            </div>
+
+                            <div id="expenseChangeDetails" style="display: none;">
+                                <div class="divider"></div>
+                                <div class="section-title" style="font-size: 14px; font-weight: 600;">支出变更</div>
+
+                                <div class="form-group">
+                                    <label class="form-label">固定支出</label>
+                                    <input type="number" class="form-input" id="changeFixedExpense" placeholder="输入新的固定支出金额" value="4000000">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">大额支出</label>
+                                    <input type="number" class="form-input" id="changeLargeExpense" placeholder="输入新的大额支出金额" value="2500000">
+                                </div>
+                            </div>
+
+                            <button class="btn" onclick="confirmIncomeExpense()">确认，开始分析</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            chatContainer.innerHTML += incomeExpenseHTML;
+
+            document.getElementById('confirmChanges').addEventListener('change', function() {
+                const incomeChangeDetails = document.getElementById('incomeChangeDetails');
+                const expenseChangeDetails = document.getElementById('expenseChangeDetails');
+
+                if (this.value === 'income_changed' || this.value === 'both_changed') {
+                    incomeChangeDetails.style.display = 'block';
+                } else {
+                    incomeChangeDetails.style.display = 'none';
+                }
+
+                if (this.value === 'expense_changed' || this.value === 'both_changed') {
+                    expenseChangeDetails.style.display = 'block';
+                } else {
+                    expenseChangeDetails.style.display = 'none';
+                }
+            });
+        }
+
+        // 添加新收入
+        function addNewIncome() {
+            const type = document.getElementById('newIncomeType').value;
+            const amount = document.getElementById('newIncomeAmount').value;
+            const date = document.getElementById('newIncomeDate').value;
+
+            if (!type || !amount) {
+                alert('请选择收入类型并输入金额');
+                return;
+            }
+
+            // 获取已添加的收入列表
+            let newIncomeList = JSON.parse(sessionStorage.getItem('newIncomeList') || '[]');
+            newIncomeList.push({ type, amount: parseFloat(amount), date });
+            sessionStorage.setItem('newIncomeList', JSON.stringify(newIncomeList));
+
+            // 更新显示
+            updateNewIncomeDisplay();
+
+            // 清空输入
+            document.getElementById('newIncomeType').value = '';
+            document.getElementById('newIncomeAmount').value = '';
+            document.getElementById('newIncomeDate').value = '已到账';
+        }
+
+        // 更新新收入列表显示
+        function updateNewIncomeDisplay() {
+            const newIncomeList = JSON.parse(sessionStorage.getItem('newIncomeList') || '[]');
+            const listContainer = document.getElementById('newIncomeListContainer');
+            const itemsContainer = document.getElementById('newIncomeItems');
+
+            if (newIncomeList.length > 0) {
+                listContainer.style.display = 'block';
+                itemsContainer.innerHTML = newIncomeList.map((item, index) => `
+                    <div class="new-income-item">
+                        <div class="new-income-info">
+                            <span class="new-income-type">${item.type}</span>
+                            <span class="new-income-amount">Rp ${item.amount.toLocaleString()}</span>
+                            <span class="new-income-date">${item.date}</span>
+                        </div>
+                        <button class="remove-btn" onclick="removeNewIncome(${index})">×</button>
+                    </div>
+                `).join('');
+            } else {
+                listContainer.style.display = 'none';
+            }
+        }
+
+        // 删除新收入
+        function removeNewIncome(index) {
+            let newIncomeList = JSON.parse(sessionStorage.getItem('newIncomeList') || '[]');
+            newIncomeList.splice(index, 1);
+            sessionStorage.setItem('newIncomeList', JSON.stringify(newIncomeList));
+            updateNewIncomeDisplay();
+        }
+
+        function confirmIncomeExpense() {
+            const confirmChanges = document.getElementById('confirmChanges').value;
+
+            // 收集用户填写的具体数据
+            const financialData = {
+                changes: confirmChanges,
+                timestamp: new Date().toISOString()
+            };
+
+            // 如果有变化，收集具体的收入支出数据
+            if (confirmChanges !== 'no_change') {
+                // 收入变化
+                if (confirmChanges === 'income_changed' || confirmChanges === 'both_changed') {
+                    financialData.balance = document.getElementById('changeBalance')?.value || '';
+                    financialData.salary = document.getElementById('changeSalary')?.value || '';
+                    financialData.salaryDate = document.getElementById('changeSalaryDate')?.value || '25号';
+                    financialData.bonus = document.getElementById('changeBonus')?.value || '';
+                    financialData.bonusDate = document.getElementById('changeBonusDate')?.value || '25号';
+                    financialData.otherIncome = document.getElementById('changeOtherIncome')?.value || '';
+                    financialData.otherIncomeDate = document.getElementById('changeOtherIncomeDate')?.value || '待确认';
+                }
+
+                // 新增收入
+                const newIncomeList = JSON.parse(sessionStorage.getItem('newIncomeList') || '[]');
+                if (newIncomeList.length > 0) {
+                    financialData.newIncome = newIncomeList;
+                }
+
+                // 支出变化
+                if (confirmChanges === 'expense_changed' || confirmChanges === 'both_changed') {
+                    financialData.fixedExpense = document.getElementById('changeFixedExpense')?.value || '';
+                    financialData.largeExpense = document.getElementById('changeLargeExpense')?.value || '';
+                }
+            }
+
+            // 保存确认信息
+            sessionStorage.setItem('analysisConfirmation', JSON.stringify(financialData));
+
+            const chatContainer = document.getElementById('chatContainer');
+
+            const confirmHTML = `
+                <div class="message user">
+                    <div class="avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">我</div>
+                    <div class="message-content">
+                        <div class="message-text">确认，开始分析</div>
+                    </div>
+                </div>
+            `;
+
+            chatContainer.innerHTML += confirmHTML;
+
+            const replyHTML = `
+                <div class="message">
+                    <div class="avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            好的！已确认信息。现在开始分析你的财务状况...
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            chatContainer.innerHTML += replyHTML;
+
+            setTimeout(() => {
+                showFullAnalysisReport();
+            }, 500);
+        }
+
+        function showFullAnalysisReport() {
+            const chatContainer = document.getElementById('chatContainer');
+
+            // 基础数据
+            const lastMonthIncome = 5000000;
+            const lastMonthExpense = 3200000;
+            const lastMonthPayment = 1200000;
+            const balanceToThisMonth = lastMonthIncome - lastMonthExpense - lastMonthPayment; // 600000
+
+            const receivedIncome = 3000000;
+            const pendingIncome = 2500000;
+            const totalIncome = receivedIncome + pendingIncome;
+
+            const fixedExpense = 2000000;
+            const largeExpense = 800000;
+            const paidBills = 1200000;
+            const totalExpense = fixedExpense + largeExpense + paidBills;
+
+            const debtBeforeIncome = 4500000;
+            const debtAfterIncome = 3200000;
+            const overdueInterest = 150000;
+
+            const credits = [
+                { platform: 'Akulaku', amount: 8000000, rate: 2.5 },
+                { platform: 'Kredivo', amount: 5000000, rate: 2.0 },
+                { platform: 'Shopee', amount: 3000000, rate: 1.8 }
+            ];
+
+            const cashBeforeIncome = balanceToThisMonth + receivedIncome - totalExpense; // -400000
+            const cashAfterIncome = balanceToThisMonth + totalIncome - totalExpense; // 2100000
+
+            const bills = [
+                { platform: 'Akulaku', amount: 2500000, daysLeft: 3, rate: 2.5, overdueRate: 5.0, priority: 'high' },
+                { platform: 'Kredivo', amount: 1500000, daysLeft: 8, rate: 2.0, overdueRate: 4.5, priority: 'medium' },
+                { platform: 'Shopee', amount: 800000, daysLeft: 15, rate: 1.8, overdueRate: 3.0, priority: 'low' }
+            ];
+
+            const cashGap = 400000;
+            const recommendedLoan = 'Shopee';
+            const loanRate = 1.8;
+            const overdueCostRate = 5.0;
+            const savings = 150000;
+
+            // 生成报告HTML
+            const reportHTML = `
+                <div class="message">
+                    <div class="avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            <strong>📊 智能资金管理报告</strong><br><br>
+                            基于你的财务数据，AI已生成最优还款方案
+                        </div>
+
+                        <!-- 第一部分:基础数据计算 -->
+                        <div class="report-section">
+                            <div class="report-section-title">第一部分:基础数据计算</div>
+
+                            <!-- 模块1: 结余金额 -->
+                            <div class="chart-card" style="background: linear-gradient(135deg, #E3F2FD 0%, #FFFFFF 100%); border: 2px solid #2196F3;">
+                                <div class="section-header">1. 结余金额(上月结余) 💰</div>
+                                <div class="data-row">
+                                    <span class="data-label">上月收入：</span>
+                                    <span class="data-value">Rp ${lastMonthIncome.toLocaleString()}</span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="data-label">上月支出：</span>
+                                    <span class="data-value danger">-Rp ${lastMonthExpense.toLocaleString()}</span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="data-label">上月还款：</span>
+                                    <span class="data-value danger">-Rp ${lastMonthPayment.toLocaleString()}</span>
+                                </div>
+                                <div class="divider"></div>
+                                <div class="data-row">
+                                    <span class="data-label"><strong>可转入本月：</strong></span>
+                                    <span class="data-value success" style="font-size:18px;">Rp ${balanceToThisMonth.toLocaleString()}</span>
+                                </div>
+                                <div style="font-size: 12px; color: #8A8F99; margin-top: 8px;">
+                                    说明:反映上月节余或缺口,可用于本月负债偿还
+                                </div>
+                            </div>
+
+                            <!-- 模块2-3: 本月资金流 -->
+                            <div class="chart-card">
+                                <div class="section-header">2-3. 本月资金流 📈</div>
+
+                                <div style="margin-bottom: 12px;">
+                                    <div style="font-size: 13px; font-weight: 600; color: #1F2D3D; margin-bottom: 8px;">本月收入:</div>
+                                    <div class="data-row">
+                                        <span class="data-label">已到账收入：</span>
+                                        <span class="data-value">Rp ${receivedIncome.toLocaleString()} <span class="badge badge-green">已到账</span></span>
+                                    </div>
+                                    <div class="data-row">
+                                        <span class="data-label">未到账收入：</span>
+                                        <span class="data-value">Rp ${pendingIncome.toLocaleString()} <span class="badge badge-orange">未到账</span></span>
+                                    </div>
+                                    <div class="divider" style="margin: 8px 0;"></div>
+                                    <div class="data-row">
+                                        <span class="data-label"><strong>总收入：</strong></span>
+                                        <span class="data-value success">Rp ${totalIncome.toLocaleString()}</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div style="font-size: 13px; font-weight: 600; color: #1F2D3D; margin-bottom: 8px;">本月支出:</div>
+                                    <div class="data-row">
+                                        <span class="data-label">固定支出(租金等)：</span>
+                                        <span class="data-value">Rp ${fixedExpense.toLocaleString()}</span>
+                                    </div>
+                                    <div class="data-row">
+                                        <span class="data-label">大额支出：</span>
+                                        <span class="data-value">Rp ${largeExpense.toLocaleString()}</span>
+                                    </div>
+                                    <div class="data-row">
+                                        <span class="data-label">已还款账单：</span>
+                                        <span class="data-value">Rp ${paidBills.toLocaleString()}</span>
+                                    </div>
+                                    <div class="divider" style="margin: 8px 0;"></div>
+                                    <div class="data-row">
+                                        <span class="data-label"><strong>总支出：</strong></span>
+                                        <span class="data-value danger" style="font-size:18px;">Rp ${totalExpense.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 模块4: 欠款计算 -->
+                            <div class="chart-card">
+                                <div class="section-header">4. 欠款计算 ⚠️</div>
+                                <div class="data-row" style="background: #FFEBEE; padding: 10px; border-radius: 6px;">
+                                    <span class="data-label"><strong>收入未到账前：</strong></span>
+                                    <span class="data-value danger" style="font-size:16px;">Rp ${debtBeforeIncome.toLocaleString()}</span>
+                                </div>
+                                <div style="font-size: 12px; color: #8A8F99; margin-bottom: 12px;">
+                                    包含之前待还款账单 + 逾期结息
+                                </div>
+
+                                <div class="data-row" style="background: #FFF3E0; padding: 10px; border-radius: 6px;">
+                                    <span class="data-label"><strong>收入到账后：</strong></span>
+                                    <span class="data-value" style="font-size:16px; color: #FF9800;">Rp ${debtAfterIncome.toLocaleString()}</span>
+                                </div>
+                                <div style="font-size: 12px; color: #8A8F99; margin-bottom: 12px;">
+                                    之后待还款账单
+                                </div>
+
+                                <div class="data-row" style="background: #FFFDE7; padding: 10px; border-radius: 6px;">
+                                    <span class="data-label"><strong>逾期结息：</strong></span>
+                                    <span class="data-value badge-yellow" style="font-size:16px;">Rp ${overdueInterest.toLocaleString()}</span>
+                                </div>
+                                <div style="font-size: 12px; color: #F9A825; font-weight: 600;">
+                                    会随时间增长,是重要风险点
+                                </div>
+                            </div>
+
+                            <!-- 模块5: 信用额度 -->
+                            <div class="chart-card">
+                                <div class="section-header">5. 信用额度 💳</div>
+                                ${credits.map(credit => `
+                                    <div class="credit-item">
+                                        <div class="credit-platform">${credit.platform}:</div>
+                                        <div class="credit-details">可用 Rp ${credit.amount.toLocaleString()} | 利率 ${credit.rate}%/月</div>
+                                    </div>
+                                `).join('')}
+                                <div style="font-size: 12px; color: #8A8F99; margin-top: 8px;">
+                                    用于评估是否可以借低息款补现金流缺口
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 第二部分:现金流与优先级分析 -->
+                        <div class="report-section">
+                            <div class="report-section-title">第二部分:现金流与优先级分析</div>
+
+                            <!-- 模块6: 可用资金能力 -->
+                            <div class="chart-card">
+                                <div class="section-header">6. 可用资金能力 📊</div>
+                                <div class="data-row" style="background: #FFEBEE; padding: 12px; border-radius: 6px;">
+                                    <span class="data-label"><strong>收入到账前：</strong></span>
+                                    <span class="data-value danger" style="font-size:18px;">Rp ${cashBeforeIncome.toLocaleString()}</span>
+                                </div>
+                                <div style="font-size: 12px; color: #8A8F99; margin-bottom: 8px;">
+                                    计算:结余 + 已到账收入 - 本月支出
+                                </div>
+                                <div style="font-size: 13px; color: #F44336; font-weight: 600; margin-bottom: 12px;">
+                                    状态:现金流短缺,需要策略优化
+                                </div>
+
+                                <div class="data-row" style="background: #E8F5E9; padding: 12px; border-radius: 6px;">
+                                    <span class="data-label"><strong>收入到账后：</strong></span>
+                                    <span class="data-value success" style="font-size:18px;">Rp ${cashAfterIncome.toLocaleString()}</span>
+                                </div>
+                                <div style="font-size: 12px; color: #8A8F99; margin-bottom: 8px;">
+                                    计算:结余 + 总收入 - 本月支出
+                                </div>
+                                <div style="font-size: 13px; color: #4CAF50; font-weight: 600;">
+                                    状态:可覆盖所有欠款
+                                </div>
+                            </div>
+
+                            <!-- 模块7: 债务偿还优先级 -->
+                            <div class="chart-card">
+                                <div class="section-header">7. 债务偿还优先级 🎯</div>
+                                ${bills.map(bill => {
+                                    const priorityClass = bill.priority === 'high' ? 'priority-high' :
+                                                      bill.priority === 'medium' ? 'priority-medium' : 'priority-low';
+                                    const priorityText = bill.priority === 'high' ? '高优先级' :
+                                                       bill.priority === 'medium' ? '中优先级' : '低优先级';
+                                    const borderColor = bill.priority === 'high' ? '红色边框' :
+                                                     bill.priority === 'medium' ? '橙色边框' : '绿色边框';
+                                    return `
+                                        <div class="priority-item ${priorityClass}">
+                                            <div class="priority-header">
+                                                <span class="priority-platform">${bill.platform}: Rp ${bill.amount.toLocaleString()} | ${bill.daysLeft}天后到期</span>
+                                            </div>
+                                            <div class="priority-reason">
+                                                利率${bill.rate}% vs 逾期${bill.overdueRate}%<br>
+                                                ${bill.priority === 'high' ? '原因:利率最高且即将逾期' :
+                                                  bill.priority === 'medium' ? '原因:逾期费用较高' :
+                                                  '原因:利率较低,可延后'}
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+
+                            <!-- 模块8: 借款与逾期对比 -->
+                            <div class="chart-card">
+                                <div class="section-header">8. 借款与逾期对比 ⚡</div>
+                                <div class="data-row">
+                                    <span class="data-label">现金缺口：</span>
+                                    <span class="data-value danger">Rp ${cashGap.toLocaleString()}</span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="data-label">推荐借款平台：</span>
+                                    <span class="data-value">${recommendedLoan}</span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="data-label">理由：</span>
+                                    <span class="data-value">利率最低(${loanRate}%),低于逾期成本(${overdueCostRate}%)</span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="data-label">预计节省成本：</span>
+                                    <span class="data-value success" style="font-size:18px;">Rp ${savings.toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 第三部分:优化策略 -->
+                        <div class="report-section">
+                            <div class="report-section-title">第三部分:优化策略</div>
+
+                            <!-- 模块9: 智能偿还策略 -->
+                            <div class="chart-card">
+                                <div class="section-header">9. 智能偿还策略 📅</div>
+                                <div class="strategy-card strategy-green">
+                                    <div style="font-weight: 600; color: #2E7D32; margin-bottom: 6px;">✅ 建议先偿还</div>
+                                    <div style="font-size: 13px; color: #1F2D3D;">
+                                        • 利率最高的贷款 (Akulaku 2.5%)<br>
+                                        • 逾期费用最高的账单 (逾期利率 5.0%)
+                                    </div>
+                                </div>
+                                <div class="strategy-card strategy-orange">
+                                    <div style="font-weight: 600; color: #E65100; margin-bottom: 6px;">⏳ 建议延期/待工资到账</div>
+                                    <div style="font-size: 13px; color: #1F2D3D;">
+                                        • 利率低、无需立即逾期 (Shopee 1.8%)<br>
+                                        • 现金可保留用于基本生活
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 模块10: 生活与支出平衡 -->
+                            <div class="chart-card">
+                                <div class="section-header">10. 生活与支出平衡 💡</div>
+                                <div class="suggestion-item suggestion-blue">
+                                    <div class="suggestion-icon">💙</div>
+                                    <div class="suggestion-text">
+                                        若固定支出时间晚于工资到账 → 允许提前承担部分固定费用
+                                    </div>
+                                </div>
+                                <div class="suggestion-item suggestion-yellow">
+                                    <div class="suggestion-icon">💛</div>
+                                    <div class="suggestion-text">
+                                        保留最低生活费 Rp 500,000 作为"应急现金池"
+                                    </div>
+                                </div>
+                                <div class="suggestion-item suggestion-purple">
+                                    <div class="suggestion-icon">💜</div>
+                                    <div class="suggestion-text">
+                                        优先压缩非必要支出保存流动性
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 第四部分:长期改善 -->
+                        <div class="report-section">
+                            <div class="report-section-title">第四部分:长期改善</div>
+                            <div class="improvement-box">
+                                <div class="section-header">11-12. 长期改善建议 📈</div>
+                                <ul class="improvement-list">
+                                    <li>下月需要减少支出: Rp 800,000 才能避免现金短缺</li>
+                                    <li>建议增加收入: Rp 1,000,000 可显著改善财务状况</li>
+                                    <li>储蓄缓冲建议: 建立3个月生活费储蓄 (约 Rp 6,000,000)</li>
+                                    <li>自动预算设置: 推荐设置自动预算分类与警告功能</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- 风险评估 -->
+                        <div class="report-section">
+                            <div class="report-section-title">第五部分:风险评估与健康度</div>
+                            <div class="chart-card" style="background: linear-gradient(135deg, #FFF3E0 0%, #FFFFFF 100%); border: 2px solid #FF9800;">
+                                <div class="section-header">🎯 您的财务健康评分</div>
+                                <div style="display: flex; align-items: center; justify-content: center; margin: 20px 0;">
+                                    <div style="width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(#FF9800 ${65 * 3.6}deg, #FFEBEE 0deg); display: flex; align-items: center; justify-content: center; position: relative;">
+                                        <div style="width: 100px; height: 100px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                                            <span style="font-size: 32px; font-weight: 700; color: #FF9800;">65</span>
+                                            <span style="font-size: 12px; color: #8A8F99;">/100分</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="text-align: center; margin-bottom: 16px;">
+                                    <span class="badge badge-orange" style="font-size: 14px;">中等风险</span>
+                                </div>
+                                <div style="font-size: 13px; color: #1F2D3D; line-height: 1.8;">
+                                    <strong>风险评估：</strong><br>
+                                    • 现金流存在短期缺口，需要优化支出结构<br>
+                                    • 逾期结息较高，建议优先处理高利率债务<br>
+                                    • 收入来源相对单一，建议增加多元化收入<br><br>
+                                    <strong>健康建议：</strong><br>
+                                    • 建立应急现金池（3-6个月生活费）<br>
+                                    • 减少非必要支出，提高流动性<br>
+                                    • 避免新增高利率债务
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 行动计划 -->
+                        <div class="report-section">
+                            <div class="report-section-title">第六部分:下一步行动计划</div>
+                            <div class="chart-card">
+                                <div class="section-header">📋 分阶段行动计划</div>
+
+                                <div style="margin-bottom: 16px;">
+                                    <div style="background: #FFEBEE; padding: 12px; border-radius: 8px; border-left: 4px solid #F44336;">
+                                        <div style="font-weight: 600; color: #C62828; margin-bottom: 8px; font-size: 15px;">🔴 短期行动（1-7天内）</div>
+                                        <ul style="margin-left: 20px; font-size: 13px; color: #1F2D3D; line-height: 1.8;">
+                                            <li>优先偿还Akulaku贷款（利率2.5%，3天后到期）</li>
+                                            <li>处理逾期账单，减少逾期结息增长</li>
+                                            <li>立即停止新增高利率债务</li>
+                                            <li>保留至少 Rp 500,000 作为应急现金</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom: 16px;">
+                                    <div style="background: #FFF3E0; padding: 12px; border-radius: 8px; border-left: 4px solid #FF9800;">
+                                        <div style="font-weight: 600; color: #E65100; margin-bottom: 8px; font-size: 15px;">🟠 中期目标（1个月内）</div>
+                                        <ul style="margin-left: 20px; font-size: 13px; color: #1F2D3D; line-height: 1.8;">
+                                            <li>减少非必要支出 Rp 800,000</li>
+                                            <li>探索增加收入的途径（兼职、副业）</li>
+                                            <li>制定详细预算计划，设置支出提醒</li>
+                                            <li>建立1个月生活费储备（约 Rp 2,000,000）</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div style="background: #E8F5E9; padding: 12px; border-radius: 8px; border-left: 4px solid #4CAF50;">
+                                        <div style="font-weight: 600; color: #2E7D32; margin-bottom: 8px; font-size: 15px;">🟢 长期规划（3-6个月）</div>
+                                        <ul style="margin-left: 20px; font-size: 13px; color: #1F2D3D; line-height: 1.8;">
+                                            <li>建立3个月生活费应急储备（Rp 6,000,000）</li>
+                                            <li>逐步降低债务比例至安全水平（<50%）</li>
+                                            <li>寻找更高收益的投资或储蓄方式</li>
+                                            <li>设定明确的财务目标（购房、投资等）</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 核心建议总结 -->
+                        <div class="report-section">
+                            <div class="report-section-title">第七部分:核心建议总结</div>
+                            <div class="chart-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                                <div class="section-header" style="color: white;">⭐ 核心建议 - 必读</div>
+                                <div style="color: white; line-height: 2; font-size: 14px;">
+                                    <strong>1. 平衡短期与长期目标：</strong><br>
+                                    短期内优先处理高利率债务，但不要影响基本生活。建立应急储备是长期财务稳定的基石。<br><br>
+                                    <strong>2. 优化负债结构：</strong><br>
+                                    使用低利率贷款（Shopee 1.8%）替换高利率债务，可显著降低利息支出。同时减少新增债务。<br><br>
+                                    <strong>3. 提高收入与支出比：</strong><br>
+                                    目标是每月净收入（收入-支出）至少为正的 Rp 500,000。通过增加收入或减少支出来实现。<br><br>
+                                    <strong>4. 持续监控与调整：</strong><br>
+                                    每月回顾财务状况，根据实际情况调整计划。财务健康需要持续关注和优化。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            chatContainer.innerHTML += reportHTML;
+
+            setTimeout(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 100);
+        }
+
+        // 处理键盘事件（Enter发送）
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // 发送消息
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            const chatContainer = document.getElementById('chatContainer');
+
+            // 添加用户消息
+            const userHTML = `
+                <div class="message user">
+                    <div class="avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">我</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            ${message}
+                        </div>
+                    </div>
+                </div>
+            `;
+            chatContainer.innerHTML += userHTML;
+
+            // 清空输入框
+            input.value = '';
+            input.style.height = '44px';
+
+            // 滚动到底部
+            setTimeout(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 100);
+
+            // 模拟AI回复
+            setTimeout(() => {
+                const response = generateResponse(message);
+                const aiHTML = `
+                    <div class="message">
+                        <div class="avatar">AI</div>
+                        <div class="message-content">
+                            <div class="message-text">
+                                ${response}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                chatContainer.innerHTML += aiHTML;
+                setTimeout(() => {
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, 100);
+            }, 500);
+        }
+
+        // 根据用户问题生成回复
+        function generateResponse(question) {
+            const lowerQuestion = question.toLowerCase();
+
+            // 关于还款优先级
+            if (lowerQuestion.includes('优先') || lowerQuestion.includes('先还')) {
+                return `根据你的财务状况，还款优先级如下：<br><br>
+                <strong>🔴 高优先级（立即处理）：</strong><br>
+                • Akulaku - Rp 2,500,000（利率2.5%，3天后到期）<br>
+                • 逾期账单 - 利率高达5.0%，必须尽快处理<br><br>
+                <strong>🟠 中优先级（1-2周内）：</strong><br>
+                • Kredivo - Rp 1,500,000（利率2.0%）<br><br>
+                <strong>🟢 低优先级（可以延后）：</strong><br>
+                • Shopee - Rp 800,000（利率1.8%，15天后到期）`;
+            }
+
+            // 关于收入
+            if (lowerQuestion.includes('收入') || lowerQuestion.includes('工资') || lowerQuestion.includes('钱')) {
+                return `你的收入情况：<br><br>
+                • 已到账收入：Rp 3,000,000<br>
+                • 未到账收入：Rp 2,500,000<br>
+                • 本月总收入：Rp 5,500,000<br><br>
+                建议在收入到账后，优先处理高利率债务，然后建立应急储备。`;
+            }
+
+            // 关于支出
+            if (lowerQuestion.includes('支出') || lowerQuestion.includes('花费') || lowerQuestion.includes('钱')) {
+                return `你的支出情况：<br><br>
+                • 固定支出：Rp 2,000,000<br>
+                • 大额支出：Rp 800,000<br>
+                • 已还款账单：Rp 1,200,000<br>
+                • 本月总支出：Rp 4,000,000<br><br>
+                建议：下个月减少非必要支出 Rp 800,000，可避免现金短缺。`;
+            }
+
+            // 关于债务
+            if (lowerQuestion.includes('债务') || lowerQuestion.includes('欠款') || lowerQuestion.includes('负债')) {
+                return `你的债务状况：<br><br>
+                • 收入未到账前：Rp 4,500,000<br>
+                • 收入到账后：Rp 3,200,000<br>
+                • 逾期结息：Rp 150,000<br><br>
+                可用信用额度：<br>
+                • Akulaku：Rp 8,000,000（2.5%/月）<br>
+                • Kredivo：Rp 5,000,000（2.0%/月）<br>
+                • Shopee：Rp 3,000,000（1.8%/月）<br><br>
+                建议使用Shopee的低利率贷款来补充现金流缺口。`;
+            }
+
+            // 关于现金流
+            if (lowerQuestion.includes('现金流') || lowerQuestion.includes('资金') || lowerQuestion.includes('流动')) {
+                return `你的现金流状况：<br><br>
+                <strong>收入到账前：</strong>Rp -400,000（现金流短缺）<br>
+                <strong>收入到账后：</strong>Rp 2,100,000（可覆盖所有欠款）<br><br>
+                现金缺口：Rp 400,000<br>
+                建议借款：Shopee（利率1.8%）<br>
+                预计节省：Rp 150,000（相比逾期）`;
+            }
+
+            // 关于储蓄
+            if (lowerQuestion.includes('储蓄') || lowerQuestion.includes('存钱') || lowerQuestion.includes('储备')) {
+                return `储蓄建议：<br><br>
+                • 应急现金池：保留 Rp 500,000<br>
+                • 1个月储备：约 Rp 2,000,000<br>
+                • 3个月储备：约 Rp 6,000,000<br><br>
+                建议建立3个月生活费作为应急储备，这是财务稳定的基石。`;
+            }
+
+            // 关于改善建议
+            if (lowerQuestion.includes('改善') || lowerQuestion.includes('建议') || lowerQuestion.includes('怎么做')) {
+                return `改善建议：<br><br>
+                <strong>短期（1-7天）：</strong><br>
+                • 优先偿还Akulaku贷款<br>
+                • 处理逾期账单<br>
+                • 停止新增高利率债务<br><br>
+                <strong>中期（1个月）：</strong><br>
+                • 减少支出 Rp 800,000<br>
+                • 探索增加收入途径<br>
+                • 建立详细预算计划<br><br>
+                <strong>长期（3-6个月）：</strong><br>
+                • 建立3个月应急储备<br>
+                • 降低债务比例至50%以下<br>
+                • 寻找更高收益的投资方式`;
+            }
+
+            // 关于风险
+            if (lowerQuestion.includes('风险') || lowerQuestion.includes('安全') || lowerQuestion.includes('评分')) {
+                return `财务健康评分：65分（中等风险）<br><br>
+                <strong>风险评估：</strong><br>
+                • 现金流存在短期缺口<br>
+                • 逾期结息较高<br>
+                • 收入来源相对单一<br><br>
+                <strong>健康建议：</strong><br>
+                • 建立应急现金池<br>
+                • 减少非必要支出<br>
+                • 避免新增高利率债务`;
+            }
+
+            // 默认回复
+            return `感谢你的提问！📊<br><br>
+            我可以帮你分析以下内容：<br>
+            • 还款优先级建议<br>
+            • 收入支出情况<br>
+            • 债务状况分析<br>
+            • 现金流管理<br>
+            • 储蓄与储备建议<br>
+            • 改善建议<br>
+            • 风险评估<br><br>
+            请告诉我你想了解哪方面的内容？`;
+        }
+    </script>
+</body>
+</html>

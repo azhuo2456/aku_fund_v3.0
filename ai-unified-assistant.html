@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI 财务助手</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: #F7F8FA;
+            color: #1F2D3D;
+            min-height: 100vh;
+        }
+        .mobile-container {
+            max-width: 430px;
+            width: 100%;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: #F7F8FA;
+            display: flex;
+            flex-direction: column;
+        }
+        .nav-bar {
+            background: white;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1F2D3D;
+        }
+        .nav-back-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #1F2D3D;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            scroll-behavior: smooth;
+        }
+        .message {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease-out;
+        }
+        .message.user { flex-direction: row-reverse; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #EB3223 0%, #FF6B6B 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .message.user .avatar {
+            background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+        }
+        .message-content {
+            max-width: calc(100% - 46px);
+        }
+        .message-text {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 16px 16px 16px 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            font-size: 15px;
+            line-height: 1.6;
+            color: #1F2D3D;
+        }
+        .message.user .message-text {
+            background: #EB3223;
+            color: white;
+            border-radius: 16px 16px 4px 16px;
+        }
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .quick-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #1F2D3D;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quick-btn:hover {
+            border-color: #EB3223;
+            background: #FEF2F2;
+        }
+        .quick-btn.primary {
+            background: #EB3223;
+            color: white;
+            border-color: #EB3223;
+        }
+        .quick-btn.primary:hover {
+            background: #D72A1B;
+        }
+        .input-area {
+            background: white;
+            padding: 12px 16px;
+            display: flex;
+            gap: 12px;
+            box-shadow: 0 -1px 0 rgba(0,0,0,0.05);
+        }
+        textarea {
+            flex: 1;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 15px;
+            resize: none;
+            max-height: 100px;
+            min-height: 40px;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+        textarea:focus { outline: none; border-color: #EB3223; }
+        .send-btn {
+            background: #EB3223;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1F2D3D;
+        }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 15px;
+            background: white;
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #EB3223;
+        }
+        .form-submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: #EB3223;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        /* ===== 上传区域样式 ===== */
+        .upload-area {
+            border: 2px dashed #EDEFF2;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #F7F8FA;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: #EB3223;
+            background: #FFF5F5;
+        }
+
+        .upload-area.uploaded {
+            border-style: solid;
+            border-color: #6BCF7F;
+            background: rgba(107, 207, 127, 0.05);
+        }
+
+        .upload-icon {
+            width: 40px;
+            height: 40px;
+            color: #8A8F99;
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            font-size: 13px;
+            color: #8A8F99;
+        }
+
+        .uploaded-preview {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .uploaded-preview img {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .remove-btn {
+            padding: 4px 8px;
+            background: #F44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .file-input {
+            display: none;
+        }
+        
+        /* 卡片样式 */
+        .data-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .data-card-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #F3F4F6;
+        }
+        .data-card-item:last-child {
+            border-bottom: none;
+        }
+        .data-item-left {
+            flex: 1;
+        }
+        .data-item-name {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1F2D3D;
+            margin-bottom: 4px;
+        }
+        .data-item-detail {
+            font-size: 13px;
+            color: #8A8F99;
+        }
+        .data-item-right {
+            text-align: right;
+        }
+        .data-item-amount {
+            font-size: 16px;
+            font-weight: 600;
+            color: #EB3223;
+        }
+        .data-item-amount.income {
+            color: #059669;
+        }
+        .data-item-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .action-link {
+            font-size: 13px;
+            cursor: pointer;
+            color: #EB3223;
+        }
+        .action-link.delete {
+            color: #8A8F99;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <div class="nav-bar">
+            <button class="nav-back-btn" id="navBackBtn" onclick="goToIndex()" style="display: none;">←</button>
+            <div class="nav-title" id="navTitle">AI 财务助手</div>
+            <button class="nav-back-btn" onclick="goToIndex()" title="返回首页">🏠</button>
+        </div>
+
+        <div class="chat-container" id="chatContainer"></div>
+
+        <div class="input-area">
+            <textarea id="userInput" placeholder="输入问题或指令..." rows="1"></textarea>
+            <button class="send-btn" onclick="handleUserInput()">发送</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== 数据存储 =====
+        let loans = JSON.parse(localStorage.getItem('loans') || '[]');
+        let incomes = JSON.parse(localStorage.getItem('incomes') || '[]');
+        let expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+        
+        const platforms = ['Akulaku', 'Kredivo', 'AdaKami', 'Indodana', 'Shopee', 'Lazada', 'TOKOPEDIA'];
+        
+        // ===== 初始化 =====
+        window.onload = function() {
+            showWelcome();
+        };
+        
+        // ===== 显示欢迎语 =====
+        function showWelcome() {
+            document.getElementById('navBackBtn').style.display = 'none';
+            document.getElementById('navTitle').textContent = 'AI 财务助手';
+            
+            const welcomeHTML = `
+                <div class="message">
+                    <div class="avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            <strong>用 AI 帮你管理所有借款</strong><br><br>
+                            整合多个平台的账单信息，生成清晰的分析与还款计划。<br><br>
+                            支持多个借款平台，自动识别账单截图，智能生成还款建议。<br><br>
+                            让资金管理更智能，还款规划更高效！
+                        </div>
+                        <div class="quick-replies">
+                            <button class="quick-btn primary" onclick="showAddLoan()">添加贷款</button>
+                            <button class="quick-btn" onclick="showIncomeList()">收入管理</button>
+                            <button class="quick-btn" onclick="showExpenseList()">支出管理</button>
+                            <button class="quick-btn" onclick="showAnalysis()">生成分析报告</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('chatContainer').innerHTML = welcomeHTML;
+        }
+        
+        // ===== 显示主菜单 =====
+        function showMainMenu() {
+            showWelcome();
+        }
+        
+        // ===== 返回首页 =====
+        function goToIndex() {
+            window.location.href = 'index-new.html';
+        }
+        
+        // ===== 返回欢迎页 =====
+        function goToWelcome() {
+            window.location.href = 'index-new.html';
+        }
+        
+        // ===== 添加贷款功能 =====
+        function showAddLoan() {
+            addUserMessage('添加贷款');
+            
+            const formHTML = `
+                <div class="message">
+                    <div class="avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            请上传截图或填写贷款信息：
+                        </div>
+                        <div class="data-card">
+                            <div class="form-group">
+                                <label class="form-label">借款平台</label>
+                                <select class="form-select" id="loanPlatform" onchange="handlePlatformChange()">
+                                    <option value="">请选择平台</option>
+                                    <option value="Akulaku">Akulaku</option>
+                                    <option value="Kredivo">Kredivo</option>
+                                    <option value="Shopee">Shopee</option>
+                                    <option value="AdaKami">AdaKami</option>
+                                    <option value="Julo">Julo</option>
+                                    <option value="other">其他平台</option>
+                                </select>
+                                <input type="text" id="otherPlatform" class="form-input"
+                                    style="display: none; margin-top: 8px;"
+                                    placeholder="请输入平台名称">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">账单截图</label>
+                                <div class="upload-area" id="billUpload" onclick="triggerUpload('bill')">
+                                    <input type="file" id="billFile" class="file-input" accept="image/*" onchange="handleFileUpload(event, 'bill')">
+                                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 4v16m8-8H4m8 8v16m-8 8H4"/>
+                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                    </svg>
+                                    <div class="upload-text">点击上传</div>
+                                    <div class="uploaded-preview" id="billPreview" style="display: none;">
+                                        <img id="billPreviewImg" style="max-width: 100px; max-height: 100px;">
+                                        <button class="remove-btn" onclick="removeUpload('bill', event)">删除</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">额度截图</label>
+                                <div class="upload-area" id="creditUpload" onclick="triggerUpload('credit')">
+                                    <input type="file" id="creditFile" class="file-input" accept="image/*" onchange="handleFileUpload(event, 'credit')">
+                                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 4v16m8-8H4m8 8v16m-8 8H4"/>
+                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                    </svg>
+                                    <div class="upload-text">点击上传</div>
+                                    <div class="uploaded-preview" id="creditPreview" style="display: none;">
+                                        <img id="creditPreviewImg" style="max-width: 100px; max-height: 100px;">
+                                        <button class="remove-btn" onclick="removeUpload('credit', event)">删除</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">账期截图</label>
+                                <div class="upload-area" id="dueDateUpload" onclick="triggerUpload('dueDate')">
+                                    <input type="file" id="dueDateFile" class="file-input" accept="image/*" onchange="handleFileUpload(event, 'dueDate')">
+                                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 4v16m8-8H4m8 8v16m-8 8H4"/>
+                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                    </svg>
+                                    <div class="upload-text">点击上传</div>
+                                    <div class="uploaded-preview" id="dueDatePreview" style="display: none;">
+                                        <img id="dueDatePreviewImg" style="max-width: 100px; max-height: 100px;">
+                                        <button class="remove-btn" onclick="removeUpload('dueDate', event)">删除</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="form-submit-btn" onclick="saveLoan()">识别并保存</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('chatContainer').innerHTML += formHTML;
+            scrollToBottom();
+        }
+        
+        function saveLoan() {
+            const platformSelect = document.getElementById('loanPlatform');
+            const otherPlatform = document.getElementById('otherPlatform');
+            const platform = platformSelect.value === 'other' ? otherPlatform.value : platformSelect.value;
+            const amount = parseFloat(document.getElementById('loanAmount').value);
+            const rate = parseFloat(document.getElementById('loanRate').value);
+            const months = parseInt(document.getElementById('loanMonths').value);
+            const date = document.getElementById('loanDate').value;
+            
+            if (!platform || !amount || !rate || !months || !date) {
+                alert('请填写所有必填字段');
+                return;
+            }
+            
+            const monthlyPayment = (amount * (1 + rate / 100 * months) / months).toFixed(0);
+            
+            const loan = {
+                id: Date.now(),
+                platform,
+                amount,
+                rate,
+                months,
+                date,
+                monthlyPayment,
+                billImage: uploadedFiles.bill,
+                creditImage: uploadedFiles.credit,
+                dueDateImage: uploadedFiles.dueDate,
+                createdAt: new Date().toISOString()
+            };
+            
+            loans.push(loan);
+            localStorage.setItem('loans', JSON.stringify(loans));
+            
+            addAIMessage(`✅ 贷款信息已保存！<br><br>
+                平台: ${platform}<br>
+                金额: Rp ${amount.toLocaleString()}<br>
+                月供: Rp ${parseInt(monthlyPayment).toLocaleString()}`);
+            
+            setTimeout(() => {
+                addAIMessage('保存成功！', true, [
+                    { text: '返回首页', action: 'goToIndex()' },
+                    { text: '添加收入', action: 'showIncomeList()' }
+                ]);
+            }, 1000);
+        }
+        
+        // ===== 收入管理功能 =====
+        function showIncomeList() {
+            addUserMessage('收入管理');
+            
+            const fixedIncomes = incomes.filter(i => i.type === 'fixed');
+            const otherIncomes = incomes.filter(i => i.type === 'other');
+            
+            let incomeHTML = `
+                <div class="message">
+                    <div class="avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            <strong>📊 收入概况</strong><br>
+                            固定收入: ${fixedIncomes.length} 笔<br>
+                            其他收入: ${otherIncomes.length} 笔
+                        </div>
+                        ${fixedIncomes.length > 0 ? `
+                            <div class="data-card">
+                                <strong>固定收入</strong>
+                                ${fixedIncomes.map(i => `
+                                    <div class="data-card-item">
+                                        <div class="data-item-left">
+                                            <div class="data-item-name">${i.source}</div>
+                                            <div class="data-item-detail">${i.description || '无备注'}</div>
+                                        </div>
+                                        <div class="data-item-right">
+                                            <div class="data-item-amount income">Rp ${i.amount.toLocaleString()}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        ${otherIncomes.length > 0 ? `
+                            <div class="data-card">
+                                <strong>其他收入</strong>
+                                ${otherIncomes.map(i => `
+                                    <div class="data-card-item">
+                                        <div class="data-item-left">
+                                            <div class="data-item-name">${i.source}</div>
+                                            <div class="data-item-detail">${i.date || '无日期'}</div>
+                                        </div>
+                                        <div class="data-item-right">
+                                            <div class="data-item-amount income">Rp ${i.amount.toLocaleString()}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        <div class="quick-replies">
+                            <button class="quick-btn primary" onclick="showAddIncome('fixed')">添加固定收入</button>
+                            <button class="quick-btn" onclick="showAddIncome('other')">添加其他收入</button>
+                            <button class="quick-btn" onclick="showMainMenu()">返回</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('chatContainer').innerHTML += incomeHTML;
+            scrollToBottom();
+        }
+        
+        function showAddIncome(type) {
+            const typeName = type === 'fixed' ? '固定' : '其他';
+            
+            const formHTML = `
+                <div class="message">
+                    <div class="avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            添加${typeName}收入：
+                        </div>
+                        <div class="data-card">
+                            <div class="form-group">
+                                <label class="form-label">收入来源</label>
+                                <input type="text" class="form-input" id="incomeSource" placeholder="例如: 工资">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">金额 (Rp)</label>
+                                <input type="number" class="form-input" id="incomeAmount" placeholder="例如: 5000000">
+                            </div>
+                            ${type === 'other' ? `
+                            <div class="form-group">
+                                <label class="form-label">日期</label>
+                                <input type="date" class="form-input" id="incomeDate">
+                            </div>
+                            ` : ''}
+                            <div class="form-group">
+                                <label class="form-label">备注</label>
+                                <input type="text" class="form-input" id="incomeDesc" placeholder="选填">
+                            </div>
+                            <button class="form-submit-btn" onclick="saveIncome('${type}')">保存收入</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('chatContainer').innerHTML += formHTML;
+            scrollToBottom();
+        }
+        
+        function saveIncome(type) {
+            const source = document.getElementById('incomeSource').value;
+            const amount = parseFloat(document.getElementById('incomeAmount').value);
+            const desc = document.getElementById('incomeDesc').value;
+            
+            if (!source || !amount) {
+                alert('请填写必填字段');
+                return;
+            }
+            
+            const income = {
+                id: Date.now(),
+                type,
+                source,
+                amount,
+                description: desc,
+                date: type === 'other' ? document.getElementById('incomeDate').value : null,
+                createdAt: new Date().toISOString()
+            };
+            
+            incomes.push(income);
+            localStorage.setItem('incomes', JSON.stringify(incomes));
+            
+            addAIMessage(`✅ 收入已保存！<br><br>
+                来源: ${source}<br>
+                金额: Rp ${amount.toLocaleString()}`);
+            
+            setTimeout(() => {
+                addAIMessage('保存成功！', true, [
+                    { text: '返回首页', action: 'goToIndex()' },
+                    { text: '添加支出', action: 'showExpenseList()' }
+                ]);
+            }, 1000);
+        }
+        
+        // ===== 支出管理功能 =====
+        function showExpenseList() {
+            addUserMessage('支出管理');
+            
+            const fixedExpenses = expenses.filter(e => e.type === 'fixed');
+            const largeExpenses = expenses.filter(e => e.type === 'large');
+            
+            let expenseHTML = `
+                <div class="message">
+                    <div class="avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            <strong>📊 支出概况</strong><br>
+                            固定支出: ${fixedExpenses.length} 笔<br>
+                            大额支出: ${largeExpenses.length} 笔
+                        </div>
+                        ${fixedExpenses.length > 0 ? `
+                            <div class="data-card">
+                                <strong>固定支出</strong>
+                                ${fixedExpenses.map(e => `
+                                    <div class="data-card-item">
+                                        <div class="data-item-left">
+                                            <div class="data-item-name">${e.name}</div>
+                                            <div class="data-item-detail">${e.description || '无备注'}</div>
+                                        </div>
+                                        <div class="data-item-right">
+                                            <div class="data-item-amount">Rp ${e.amount.toLocaleString()}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        ${largeExpenses.length > 0 ? `
+                            <div class="data-card">
+                                <strong>大额支出</strong>
+                                ${largeExpenses.map(e => `
+                                    <div class="data-card-item">
+                                        <div class="data-item-left">
+                                            <div class="data-item-name">${e.name}</div>
+                                            <div class="data-item-detail">${e.date || '无日期'}</div>
+                                        </div>
+                                        <div class="data-item-right">
+                                            <div class="data-item-amount">Rp ${e.amount.toLocaleString()}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        <div class="quick-replies">
+                            <button class="quick-btn primary" onclick="showAddExpense('fixed')">添加固定支出</button>
+                            <button class="quick-btn" onclick="showAddExpense('large')">添加大额支出</button>
+                            <button class="quick-btn" onclick="showMainMenu()">返回</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('chatContainer').innerHTML += expenseHTML;
+            scrollToBottom();
+        }
+        
+        function showAddExpense(type) {
+            const typeName = type === 'fixed' ? '固定' : '大额';
+            
+            const formHTML = `
+                <div class="message">
+                    <div class="avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            添加${typeName}支出：
+                        </div>
+                        <div class="data-card">
+                            <div class="form-group">
+                                <label class="form-label">支出名称</label>
+                                <input type="text" class="form-input" id="expenseName" placeholder="例如: 房租">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">金额 (Rp)</label>
+                                <input type="number" class="form-input" id="expenseAmount" placeholder="例如: 2000000">
+                            </div>
+                            ${type === 'large' ? `
+                            <div class="form-group">
+                                <label class="form-label">日期</label>
+                                <input type="date" class="form-input" id="expenseDate">
+                            </div>
+                            ` : ''}
+                            <div class="form-group">
+                                <label class="form-label">备注</label>
+                                <input type="text" class="form-input" id="expenseDesc" placeholder="选填">
+                            </div>
+                            <button class="form-submit-btn" onclick="saveExpense('${type}')">保存支出</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('chatContainer').innerHTML += formHTML;
+            scrollToBottom();
+        }
+        
+        function saveExpense(type) {
+            const name = document.getElementById('expenseName').value;
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const desc = document.getElementById('expenseDesc').value;
+            
+            if (!name || !amount) {
+                alert('请填写必填字段');
+                return;
+            }
+            
+            const expense = {
+                id: Date.now(),
+                type,
+                name,
+                amount,
+                description: desc,
+                date: type === 'large' ? document.getElementById('expenseDate').value : null,
+                createdAt: new Date().toISOString()
+            };
+            
+            expenses.push(expense);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+            
+            addAIMessage(`✅ 支出已保存！<br><br>
+                名称: ${name}<br>
+                金额: Rp ${amount.toLocaleString()}`);
+            
+            setTimeout(() => {
+                addAIMessage('保存成功！', true, [
+                    { text: '返回首页', action: 'goToIndex()' },
+                    { text: '生成报告', action: 'showAnalysis()' }
+                ]);
+            }, 1000);
+        }
+        
+        // ===== 分析报告功能 =====
+        function showAnalysis() {
+            addUserMessage('生成分析报告');
+            addAIMessage('正在生成分析报告...');
+            
+            setTimeout(() => {
+                const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
+                const totalExpense = expenses.reduce((sum, e) => sum + e.amount, 0);
+                const totalLoan = loans.reduce((sum, l) => sum + l.amount, 0);
+                const totalMonthlyPayment = loans.reduce((sum, l) => sum + parseFloat(l.monthlyPayment), 0);
+                const balance = totalIncome - totalExpense - totalMonthlyPayment;
+                const avgRate = loans.length > 0 ? (loans.reduce((sum, l) => sum + l.rate, 0) / loans.length).toFixed(2) : 0;
+                
+                const analysisHTML = `
+                    <div class="message">
+                        <div class="avatar">AI</div>
+                        <div class="message-content">
+                            <div class="message-text">
+                                <strong>📊 财务分析报告</strong>
+                            </div>
+                            <div class="data-card">
+                                <strong>收支分析</strong>
+                                <div class="data-card-item">
+                                    <div class="data-item-left">
+                                        <div class="data-item-name">总收入</div>
+                                    </div>
+                                    <div class="data-item-right">
+                                        <div class="data-item-amount income">Rp ${totalIncome.toLocaleString()}</div>
+                                    </div>
+                                </div>
+                                <div class="data-card-item">
+                                    <div class="data-item-left">
+                                        <div class="data-item-name">总支出</div>
+                                    </div>
+                                    <div class="data-item-right">
+                                        <div class="data-item-amount">Rp ${totalExpense.toLocaleString()}</div>
+                                    </div>
+                                </div>
+                                <div class="data-card-item">
+                                    <div class="data-item-left">
+                                        <div class="data-item-name">贷款总额</div>
+                                    </div>
+                                    <div class="data-item-right">
+                                        <div class="data-item-amount">Rp ${totalLoan.toLocaleString()}</div>
+                                    </div>
+                                </div>
+                                <div class="data-card-item">
+                                    <div class="data-item-left">
+                                        <div class="data-item-name">月供总额</div>
+                                    </div>
+                                    <div class="data-item-right">
+                                        <div class="data-item-amount">Rp ${totalMonthlyPayment.toLocaleString()}</div>
+                                    </div>
+                                </div>
+                                <div class="data-card-item">
+                                    <div class="data-item-left">
+                                        <div class="data-item-name">结余</div>
+                                    </div>
+                                    <div class="data-item-right">
+                                        <div class="data-item-amount ${balance >= 0 ? 'income' : ''}">Rp ${balance.toLocaleString()}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="data-card">
+                                <strong>贷款分析</strong>
+                                <div class="data-card-item">
+                                    <div class="data-item-left">
+                                        <div class="data-item-name">贷款笔数</div>
+                                    </div>
+                                    <div class="data-item-right">
+                                        <div>${loans.length} 笔</div>
+                                    </div>
+                                </div>
+                                <div class="data-card-item">
+                                    <div class="data-item-left">
+                                        <div class="data-item-name">平均利率</div>
+                                    </div>
+                                    <div class="data-item-right">
+                                        <div>${avgRate}%</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="quick-replies">
+                                <button class="quick-btn" onclick="goToIndex()">返回首页</button>
+                                <button class="quick-btn" onclick="showMainMenu()">返回主菜单</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('chatContainer').innerHTML += analysisHTML;
+                scrollToBottom();
+            }, 1500);
+        }
+        
+        // ===== 上传相关函数 =====
+        let uploadedFiles = {
+            bill: null,
+            credit: null,
+            dueDate: null
+        };
+
+        function triggerUpload(type) {
+            const fileInput = document.getElementById(type + 'File');
+            fileInput.click();
+        }
+
+        function handleFileUpload(event, type) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedFiles[type] = e.target.result;
+                    showPreview(type, e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function showPreview(type, dataUrl) {
+            const uploadArea = document.getElementById(type + 'Upload');
+            const preview = document.getElementById(type + 'Preview');
+            const img = document.getElementById(type + 'PreviewImg');
+            
+            uploadArea.classList.add('uploaded');
+            preview.style.display = 'flex';
+            img.src = dataUrl;
+        }
+
+        function removeUpload(type, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            const uploadArea = document.getElementById(type + 'Upload');
+            const preview = document.getElementById(type + 'Preview');
+            
+            uploadArea.classList.remove('uploaded');
+            preview.style.display = 'none';
+            uploadedFiles[type] = null;
+            document.getElementById(type + 'File').value = '';
+        }
+
+        // ===== 平台选择处理 =====
+        function handlePlatformChange() {
+            const platformSelect = document.getElementById('loanPlatform');
+            const otherInput = document.getElementById('otherPlatform');
+            
+            if (platformSelect.value === 'other') {
+                otherInput.style.display = 'block';
+            } else {
+                otherInput.style.display = 'none';
+            }
+        }
+        
+        // ===== 消息辅助函数 =====
+        function addUserMessage(text) {
+            const html = `
+                <div class="message user">
+                    <div class="avatar">我</div>
+                    <div class="message-content">
+                        <div class="message-text">${text}</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('chatContainer').innerHTML += html;
+            scrollToBottom();
+        }
+        
+        function addAIMessage(text, showActions = false, actions = []) {
+            let actionHTML = '';
+            if (showActions && actions.length > 0) {
+                actionHTML = `<div class="quick-replies">
+                    ${actions.map(a => `<button class="quick-btn" onclick="${a.action}">${a.text}</button>`).join('')}
+                </div>`;
+            }
+            
+            const html = `
+                <div class="message">
+                    <div class="avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-text">${text}</div>
+                        ${actionHTML}
+                    </div>
+                </div>
+            `;
+            document.getElementById('chatContainer').innerHTML += html;
+            scrollToBottom();
+        }
+        
+        function scrollToBottom() {
+            const container = document.getElementById('chatContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // ===== 用户输入处理 =====
+        function handleUserInput() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            addUserMessage(text);
+            input.value = '';
+            
+            setTimeout(() => {
+                const lowerText = text.toLowerCase();
+                if (lowerText.includes('贷款') || lowerText.includes('借款')) {
+                    showAddLoan();
+                } else if (lowerText.includes('收入')) {
+                    showIncomeList();
+                } else if (lowerText.includes('支出')) {
+                    showExpenseList();
+                } else if (lowerText.includes('报告') || lowerText.includes('分析')) {
+                    showAnalysis();
+                } else if (lowerText.includes('菜单') || lowerText.includes('返回')) {
+                    showMainMenu();
+                } else {
+                    addAIMessage('我理解您的消息。您可以通过以下功能管理财务：', true, [
+                        { text: '添加贷款', action: 'showAddLoan()' },
+                        { text: '收入管理', action: 'showIncomeList()' },
+                        { text: '支出管理', action: 'showExpenseList()' },
+                        { text: '生成报告', action: 'showAnalysis()' }
+                    ]);
+                }
+            }, 500);
+        }
+        
+        // ===== 事件监听 =====
+        const textarea = document.getElementById('userInput');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+        
+        textarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleUserInput();
+            }
+        });
+    </script>
+</body>
+</html>

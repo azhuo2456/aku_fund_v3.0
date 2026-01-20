@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 还款助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background-color: #FFFFFF;
+            color: #1F2D3D;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 430px;
+            margin: 0 auto;
+            background: #FFFFFF;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* ===== Top Bar ===== */
+        .top-bar {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            background: white;
+            border-bottom: 1px solid #EDEFF2;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #EB3223, #CC0000);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .app-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #1F2D3D;
+        }
+
+        .top-bar-right {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .icon-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .icon-btn svg {
+            width: 20px;
+            height: 20px;
+            color: #8A8F99;
+        }
+
+        .eye-open { display: block; }
+        .eye-close { display: none; }
+        .icon-btn.eye-toggled .eye-open { display: none; }
+        .icon-btn.eye-toggled .eye-close { display: block; }
+
+        .badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            background: #EB3223;
+            border-radius: 50%;
+            border: 1px solid white;
+        }
+
+        /* ===== 内容区 ===== */
+        .content {
+            flex: 1;
+            padding: 16px;
+            padding-bottom: 80px;
+            overflow-y: auto;
+            position: relative;
+            min-height: calc(100vh - 120px);
+        }
+
+        .module {
+            margin-bottom: 20px;
+        }
+
+        .module-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #1F2D3D;
+            margin-bottom: 12px;
+        }
+
+        /* ===== 财务总览卡 ===== */
+        .finance-overview-card {
+            background: white;
+            border: 1px solid #EDEFF2;
+            border-radius: 12px;
+            padding: 20px 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            margin-bottom: 16px;
+        }
+
+        /* 板块标题 */
+        .overview-card-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1F2D3D;
+            margin-bottom: 20px;
+        }
+
+        /* 主待还区域 */
+        .overview-main {
+            margin-bottom: 20px;
+        }
+
+        /* 剩余应还金额 - 上下结构 */
+        .overview-amount-row {
+            margin-bottom: 16px;
+        }
+
+        .overview-amount-label {
+            display: block;
+            font-size: 14px;
+            color: #8A8F99;
+            margin-bottom: 4px;
+        }
+
+        .overview-amount-debt {
+            font-size: 36px;
+            font-weight: 700;
+            color: #EB3223;
+            line-height: 1.2;
+            display: block;
+        }
+
+        /* 进度条 */
+        .progress-bar-wrapper {
+            margin-bottom: 24px;
+        }
+
+        .progress-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .progress-bar-container {
+            flex: 1;
+            height: 8px;
+            background: #F5F7FA;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #34B46A, #2D9F5C);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar-percentage {
+            font-size: 14px;
+            color: #34B46A;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* 进度信息行 - 左右结构 */
+        .progress-info-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .progress-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .progress-info-label {
+            font-size: 13px;
+            color: #8A8F99;
+        }
+
+        .progress-info-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1F2D3D;
+        }
+
+        .progress-info-value.paid {
+            color: #34B46A;
+        }
+
+        .progress-info-value.remaining {
+            color: #EB3223;
+        }
+
+        /* 原有样式保留 */
+        .overview-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .overview-label {
+            font-size: 13px;
+            color: #8A8F99;
+            margin-bottom: 8px;
+        }
+
+        .overview-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .overview-value.debt {
+            color: #EB3223;
+        }
+
+        .overview-value.income {
+            color: #34B46A;
+        }
+
+        .overview-value.paid {
+            color: #1F2D3D;
+        }
+
+        .overview-sub {
+            font-size: 11px;
+            color: #8A8F99;
+        }
+
+        .overview-sub span {
+            font-weight: 500;
+            color: #1F2D3D;
+        }
+
+        .overview-divider {
+            width: 1px;
+            background: #EDEFF2;
+        }
+
+        /* ===== 原有样式保留 ===== */
+        .overview-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .overview-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .overview-value.debt {
+            color: #EB3223;
+        }
+
+        .overview-value.income {
+            color: #34B46A;
+        }
+
+        .overview-value.paid {
+            color: #1F2D3D;
+        }
+
+        .overview-sub {
+            font-size: 11px;
+            color: #8A8F99;
+        }
+
+        .overview-sub span {
+            font-weight: 500;
+            color: #1F2D3D;
+        }
+
+        .overview-divider {
+            width: 1px;
+            background: #EDEFF2;
+        }
+
+        /* ===== 保留原有债务卡片样式（用于其他页面） ===== */
+        .debt-card {
+            background: white;
+            border: 1px solid #EDEFF2;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .debt-title {
+            font-size: 14px;
+            color: #8A8F99;
+            margin-bottom: 12px;
+        }
+
+        .debt-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1F2D3D;
+            margin-bottom: 12px;
+        }
+
+        .debt-secondary {
+            font-size: 14px;
+            color: #8A8F99;
+            margin-bottom: 16px;
+        }
+
+        .debt-secondary strong {
+            color: #EB3223;
+        }
+
+        .cta-btn {
+            width: 100%;
+            height: 48px;
+            background: #EB3223;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cta-btn:hover {
+            background: #CC0000;
+            box-shadow: 0 4px 12px rgba(235, 50, 35, 0.3);
+        }
+
+        .cta-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* ===== AI 建议卡片 ===== */
+        .ai-advice-card {
+            background: linear-gradient(135deg, #FFF5F5 0%, #FFFFFF 100%);
+            border: 1px solid #FFE5E5;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .advice-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #EB3223;
+            margin-bottom: 12px;
+        }
+
+        .advice-content {
+            font-size: 14px;
+            color: #1F2D3D;
+            line-height: 1.7;
+        }
+
+        .advice-content p {
+            margin: 0;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #EDEFF2;
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #EB3223;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        .toggle-label {
+            font-size: 12px;
+            color: #8A8F99;
+            margin-left: 8px;
+        }
+
+        /* ===== 平台卡片滑动 ===== */
+        .platform-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .platform-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .platform-card {
+            flex-shrink: 0;
+            width: 140px;
+            background: white;
+            border: 1px solid #EDEFF2;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .platform-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1F2D3D;
+            margin-bottom: 8px;
+        }
+
+        .platform-amount {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1F2D3D;
+            margin-bottom: 6px;
+        }
+
+        .platform-status {
+            font-size: 12px;
+            color: #8A8F99;
+        }
+
+        .platform-status.urgent {
+            color: #EB3223;
+        }
+
+        .platform-status.paid {
+            color: #6BCF7F;
+        }
+
+        /* ===== 账单列表 ===== */
+        .bill-list {
+            background: white;
+            border: 1px solid #EDEFF2;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* ===== 收入管理卡片 ===== */
+        .income-card {
+            background: white;
+            border: 1px solid #EDEFF2;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .income-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .income-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #1F2D3D;
+        }
+
+        .income-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: #EB3223;
+        }
+
+        .income-detail {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #F7F8FA;
+        }
+
+        .income-detail:last-child {
+            border-bottom: none;
+        }
+
+        .income-label {
+            font-size: 14px;
+            color: #8A8F99;
+        }
+
+        .income-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1F2D3D;
+        }
+
+        .bill-item {
+            padding: 16px;
+            border-bottom: 1px solid #EDEFF2;
+            border-left: 4px solid transparent;
+        }
+
+        .bill-item.priority-high {
+            border-left-color: #EB3223;
+            background: linear-gradient(90deg, rgba(235, 50, 35, 0.05), transparent);
+        }
+
+        .bill-item.priority-medium {
+            border-left-color: #F5A623;
+            background: linear-gradient(90deg, rgba(245, 166, 35, 0.05), transparent);
+        }
+
+        .bill-item.priority-low {
+            border-left-color: #34B46A;
+            background: linear-gradient(90deg, rgba(52, 180, 106, 0.05), transparent);
+        }
+
+        .bill-item:last-child {
+            border-bottom: none;
+        }
+
+        .bill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .bill-platform {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1F2D3D;
+        }
+
+        .bill-date {
+            font-size: 13px;
+            color: #8A8F99;
+        }
+
+        .bill-amount {
+            font-size: 16px;
+            font-weight: 600;
+            color: #EB3223;
+            margin-bottom: 4px;
+        }
+
+        .bill-status {
+            font-size: 12px;
+            color: #8A8F99;
+        }
+
+        .bill-status.paid {
+            color: #6BCF7F;
+        }
+
+        .bill-status.pending {
+            color: #EB3223;
+        }
+
+        .bill-status.urgent {
+            color: #EB3223;
+            font-weight: 600;
+        }
+
+        .bill-status.upcoming {
+            color: #F5A623;
+        }
+
+        /* ===== 账单操作区 ===== */
+        .bill-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .confirm-payment-btn {
+            padding: 6px 12px;
+            background: #EB3223;
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            pointer-events: auto;
+            z-index: 1;
+        }
+
+        .confirm-payment-btn:hover {
+            background: #CC0000;
+        }
+
+        .confirm-payment-btn:active {
+            transform: scale(0.95);
+        }
+
+        .confirm-payment-btn.secondary {
+            background: #F7F8FA;
+            color: #8A8F99;
+            border: 1px solid #EDEFF2;
+        }
+
+        .confirm-payment-btn.secondary:hover {
+            background: #EDEFF2;
+            color: #1F2D3D;
+        }
+
+        /* ===== 板块头部 ===== */
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .module-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1F2D3D;
+        }
+
+        .module-link {
+            font-size: 14px;
+            color: #EB3223;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .module-link:hover {
+            color: #CC0000;
+        }
+
+        .module-link svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ===== 快捷操作区 ===== */
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .quick-action-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 8px;
+            background: white;
+            border: 1px solid #EDEFF2;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-action-btn:hover {
+            border-color: #EB3223;
+            box-shadow: 0 2px 8px rgba(235, 50, 35, 0.1);
+        }
+
+        .quick-action-btn svg {
+            width: 24px;
+            height: 24px;
+            color: #EB3223;
+        }
+
+        .quick-action-btn span {
+            font-size: 13px;
+            color: #1F2D3D;
+            font-weight: 500;
+        }
+
+        /* ===== 自动记录区 ===== */
+        .auto-record-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 16px;
+            border-top: 1px solid #F7F8FA;
+            margin-top: 12px;
+        }
+
+        .auto-record-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .auto-record-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1F2D3D;
+        }
+
+        .auto-record-desc {
+            font-size: 12px;
+            color: #8A8F99;
+            margin-top: 2px;
+        }
+
+        /* ===== AI 实时分析卡 ===== */
+        .ai-live-card {
+            background: linear-gradient(135deg, #FFF5F5, #FFFFFF);
+            border: 1px solid #FFE5E5;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .ai-live-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            background: #6BCF7F;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .ai-live-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1F2D3D;
+            display: flex;
+            align-items: center;
+        }
+
+        .ai-live-score {
+            font-size: 13px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+
+        .ai-live-score.good {
+            background: #E8F5EF;
+            color: #34B46A;
+        }
+
+        .ai-live-score.medium {
+            background: #FFF9E6;
+            color: #F5A623;
+        }
+
+        .ai-live-score.high {
+            background: #FFE5E5;
+            color: #EB3223;
+        }
+
+        .ai-live-content {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .ai-live-item {
+            flex: 1;
+            text-align: center;
+            padding: 12px 8px;
+            background: rgba(255,255,255, 0.8);
+            border-radius: 8px;
+        }
+
+        .ai-live-label {
+            display: block;
+            font-size: 11px;
+            color: #8A8F99;
+            margin-bottom: 4px;
+        }
+
+        .ai-live-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F2D3D;
+        }
+
+        .ai-live-value.good {
+            color: #34B46A;
+        }
+
+        .ai-live-value.medium {
+            color: #F5A623;
+        }
+
+        .ai-live-value.low {
+            color: #34B46A;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <div class="avatar">A</div>
+                <div class="app-title">AI 还款助手</div>
+            </div>
+            <div class="top-bar-right">
+                <button class="icon-btn eye-toggled" id="eyeBtn" onclick="toggleEye()">
+                    <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    <svg class="eye-close" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a9.97 9.97 0 01-1.563 3.029m-1.41-1.41A9.953 9.953 0 0012 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 01.563-3.029"/>
+                    </svg>
+                </button>
+                <button class="icon-btn" onclick="handleNotification()">
+                    <span class="badge"></span>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 内容区 -->
+        <main class="content">
+            <!-- 模块一：财务总览 -->
+            <section class="module">
+                <div class="finance-overview-card">
+                    <div class="overview-main">
+                        <div class="overview-amount-row">
+                            <span class="overview-amount-label">剩余应还金额</span>
+                            <span class="overview-amount-debt">Rp 128.45M</span>
+                        </div>
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-bar-row">
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar-fill" style="width: 35%;"></div>
+                                </div>
+                                <span class="progress-bar-percentage">35%</span>
+                            </div>
+                        </div>
+                        <div class="progress-info-row">
+                            <div class="progress-info-item">
+                                <span class="progress-info-label">已还</span>
+                                <span class="progress-info-value paid">Rp 4.7M</span>
+                            </div>
+                            <div class="progress-info-item">
+                                <span class="progress-info-label">本月应还</span>
+                                <span class="progress-info-value">Rp 15M</span>
+                            </div>
+                            <div class="progress-info-item">
+                                <span class="progress-info-label">本月剩余应还</span>
+                                <span class="progress-info-value remaining">Rp 10.3M</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 快捷操作按钮 -->
+            <section class="module">
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="handleUploadBill()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 4v16m8-8H4"/>
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <path d="M17 8l2-2m-2 2l-2-2"/>
+                        </svg>
+                        <span>新增贷款</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="manageExpense()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                            <circle cx="8.5" cy="7" r="4"/>
+                            <line x1="20" y1="8" x2="20" y2="14"/>
+                        </svg>
+                        <span>新增支出</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="manageIncome()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599-1M12 8V7m0 1v8m0-1v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>新增收入</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="openAIAssistant()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm-1 14h2v2h-2zm0-10h2v8h-2z"/>
+                        </svg>
+                        <span>AI助手</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 模块三：AI 智能洞察 -->
+            <section class="module">
+                <div class="module-header">
+                    <div class="module-title">AI 智能洞察</div>
+                    <div class="module-link" onclick="viewReport()">
+                        查看报告
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- 实时分析结果 -->
+                <div class="ai-live-card">
+                    <div class="ai-live-header">
+                        <div class="ai-live-title">
+                            <span class="live-indicator"></span>
+                            实时财务健康度
+                        </div>
+                        <div class="ai-live-score good">良好</div>
+                    </div>
+                    <div class="ai-live-content">
+                        <div class="ai-live-item">
+                            <span class="ai-live-label">收入/债务比</span>
+                            <div class="ai-live-value good">8.56%</div>
+                        </div>
+                        <div class="ai-live-item">
+                            <span class="ai-live-label">本月剩余可支配</span>
+                            <div class="ai-live-value">Rp 2,800,000</div>
+                        </div>
+                        <div class="ai-live-item">
+                            <span class="ai-live-label">逾期风险</span>
+                            <div class="ai-live-value low">低</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI 建议总结 -->
+                <div class="ai-advice-card">
+                    <div class="advice-title">💡 智能建议</div>
+                    <div class="advice-content">
+                        <p>根据您的财务状况分析，建议优先处理 Akulaku 的逾期账单以避免罚息。本月可支配资金充足，可考虑提前结清高息贷款，预计可节省约 Rp 450,000 的利息支出。同时建议控制非必要支出，将储蓄率提升至 25% 以上，为未来应对突发情况做准备。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 模块四：还款优先级 -->
+            <section class="module">
+                <div class="module-header">
+                    <div class="module-title">还款优先级</div>
+                </div>
+                <div class="bill-list">
+                    <!-- 账单 1 - 高优先级 -->
+                    <div class="bill-item priority-high">
+                        <div class="bill-header">
+                            <div class="bill-platform">Akulaku · 月度账单</div>
+                            <div class="bill-date">2025-01-22</div>
+                        </div>
+                        <div class="bill-amount">- Rp 3,500,000</div>
+                        <div class="bill-actions">
+                            <div class="bill-status urgent">逾期 1 天</div>
+                            <button class="confirm-payment-btn" onclick="confirmPayment(this)">确认还款</button>
+                        </div>
+                    </div>
+                    <!-- 账单 2 - 中优先级 -->
+                    <div class="bill-item priority-medium">
+                        <div class="bill-header">
+                            <div class="bill-platform">Kredivo · 分期账单</div>
+                            <div class="bill-date">2025-01-24</div>
+                        </div>
+                        <div class="bill-amount">- Rp 1,200,000</div>
+                        <div class="bill-actions">
+                            <div class="bill-status pending">待还</div>
+                            <button class="confirm-payment-btn" onclick="confirmPayment(this)">确认还款</button>
+                        </div>
+                    </div>
+                    <!-- 账单 3 - 低优先级 -->
+                    <div class="bill-item priority-low">
+                        <div class="bill-header">
+                            <div class="bill-platform">Shopee PayLater · 分期账单</div>
+                            <div class="bill-date">2025-01-28</div>
+                        </div>
+                        <div class="bill-amount">- Rp 850,000</div>
+                        <div class="bill-actions">
+                            <div class="bill-status upcoming">即将到期</div>
+                            <button class="confirm-payment-btn" onclick="confirmPayment(this)">确认还款</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function toggleEye() {
+            document.getElementById('eyeBtn').classList.toggle('eye-toggled');
+        }
+
+        function handleNotification() {
+            alert('通知中心');
+        }
+
+        function handleUploadBill() {
+            window.location.href = 'add-bill.html';
+        }
+
+        function viewStrategy() {
+            alert('查看节省利息策略\n\n跳转到还款计划页面');
+            window.location.href = 'repayment-plan.html';
+        }
+
+        function viewReport() {
+            window.location.href = 'ai-analysis.html';
+        }
+
+        function viewRepaymentPlan() {
+            window.location.href = 'ai-analysis.html?view=payment';
+        }
+
+        function manageExpense() {
+            window.location.href = 'expense-management.html';
+        }
+
+        function manageIncome() {
+            window.location.href = 'income-management.html';
+        }
+
+        function openAIAssistant() {
+            window.location.href = 'ai-unified-assistant.html';
+        }
+
+        function confirmPayment(btn) {
+            console.log('确认还款按钮被点击');
+            const billActions = btn.parentElement;
+            const statusDiv = billActions.querySelector('.bill-status');
+
+            if (statusDiv.classList.contains('pending')) {
+                // 待还 -> 已还
+                statusDiv.className = 'bill-status paid';
+                statusDiv.textContent = '已还款';
+                btn.textContent = '撤销';
+                btn.classList.add('secondary');
+            } else {
+                // 已还 -> 待还
+                statusDiv.className = 'bill-status pending';
+                statusDiv.textContent = '待还';
+                btn.textContent = '确认还款';
+                btn.classList.remove('secondary');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>支出管理</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: #F7F8FA;
+      color: #1F2D3D;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== 手机容器 ===== */
+    .mobile-container {
+      max-width: 430px;
+      width: 100%;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: #F7F8FA;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* ===== 顶部导航 ===== */
+    .nav-bar {
+      background: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+    }
+
+    .nav-left, .nav-right {
+      width: 40px;
+      display: flex;
+      align-items: center;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .nav-title {
+      flex: 1;
+      text-align: center;
+      font-size: 17px;
+      font-weight: 600;
+      color: #1F2D3D;
+    }
+
+    /* ===== 聊天区域 ===== */
+    .chat-container {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 16px;
+    }
+
+    /* ===== 消息样式 ===== */
+    .message {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .message.user { flex-direction: row-reverse; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .avatar.ai {
+      background: linear-gradient(135deg, #EB3223, #CC0000);
+      color: white;
+    }
+
+    .avatar.user {
+      background: #EDEFF2;
+      color: #1F2D3D;
+    }
+
+    .message-content { flex: 1; max-width: calc(100% - 50px); }
+
+    .message-text {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #1F2D3D;
+      margin-bottom: 12px;
+    }
+
+    /* ===== 快捷回复按钮 ===== */
+    .quick-replies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .quick-btn {
+      padding: 10px 16px;
+      background: white;
+      border: 1px solid #EDEFF2;
+      border-radius: 20px;
+      font-size: 14px;
+      color: #1F2D3D;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .quick-btn:hover { border-color: #EB3223; color: #EB3223; }
+
+    .quick-btn.primary {
+      background: #EB3223;
+      color: white;
+      border-color: #EB3223;
+    }
+
+    .quick-btn.primary:hover { background: #CC0000; }
+
+    /* ===== 表单卡片 ===== */
+    .form-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .form-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1F2D3D;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #EDEFF2;
+    }
+
+    .section-header {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1F2D3D;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #EB3223;
+    }
+
+    /* ===== 表单元素 ===== */
+    .form-group { margin-bottom: 16px; }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #1F2D3D;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #EDEFF2;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #1F2D3D;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus { outline: none; border-color: #EB3223; }
+    .form-input::placeholder { color: #C8CDD4; }
+
+    .form-select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #EDEFF2;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #1F2D3D;
+      background: white;
+      cursor: pointer;
+    }
+
+    .form-select:focus { outline: none; border-color: #EB3223; }
+
+    .divider { height: 1px; background: #EDEFF2; margin: 20px 0; }
+
+    /* ===== 详情 ===== */
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #F7F8FA;
+    }
+    .detail-item:last-child { border-bottom: none; }
+
+    .detail-item.total {
+      border-top: 2px solid #EDEFF2;
+      margin-top: 8px;
+      padding-top: 16px;
+    }
+
+    .detail-label { font-size: 14px; color: #8A8F99; }
+    .detail-value { font-size: 16px; font-weight: 600; color: #1F2D3D; }
+    .detail-value.expense { color: #EB3223; }
+
+    /* ===== 操作按钮 ===== */
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-btn.btn-secondary { background: #F7F8FA; color: #8A8F99; }
+    .action-btn.btn-secondary:hover { background: #EDEFF2; color: #1F2D3D; }
+
+    .action-btn.btn-primary { background: #EB3223; color: white; }
+    .action-btn.btn-primary:hover { background: #CC0000; }
+
+    /* ===== 支出卡片 ===== */
+    .expense-card {
+      background: #F8F9FA;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid #EDEFF2;
+    }
+
+    .expense-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .expense-card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1F2D3D;
+    }
+
+    .expense-card-amount {
+      font-size: 18px;
+      font-weight: 600;
+      color: #EB3223;
+    }
+
+    .expense-card-detail {
+      font-size: 13px;
+      color: #8A8F99;
+      margin-bottom: 12px;
+    }
+
+    .expense-card-actions { display: flex; gap: 8px; }
+
+    .expense-card-btn {
+      flex: 1;
+      padding: 8px;
+      background: white;
+      border: 1px solid #EDEFF2;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #8A8F99;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .expense-card-btn:hover { border-color: #EB3223; color: #EB3223; }
+    .expense-card-btn.delete:hover { background: #FFF5F5; }
+
+    /* ===== 底部输入 ===== */
+    .input-bar {
+      background: white;
+      padding: 12px 16px;
+      border-top: 1px solid #EDEFF2;
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      position: sticky;
+      bottom: 0;
+      z-index: 100;
+    }
+
+    .message-input {
+      flex: 1;
+      padding: 12px 16px;
+      background: #F7F8FA;
+      border: 1px solid transparent;
+      border-radius: 24px;
+      font-size: 15px;
+      color: #1F2D3D;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .message-input:focus { background: white; border-color: #EB3223; }
+    .message-input::placeholder { color: #C8CDD4; }
+
+    .send-btn {
+      width: 44px;
+      height: 44px;
+      background: #EB3223;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover { background: #CC0000; transform: scale(1.05); }
+
+    .send-btn svg { width: 20px; height: 20px; }
+
+    /* ===== 提示文字 ===== */
+    .hint-text { font-size: 13px; color: #8A8F99; margin-top: 4px; }
+  </style>
+</head>
+
+<body>
+  <div class="mobile-container">
+    <!-- 顶部导航 -->
+    <div class="nav-bar">
+      <div class="nav-left">
+        <button class="back-btn" onclick="goBack()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+      </div>
+      <div class="nav-title">支出管理</div>
+      <div class="nav-right"></div>
+    </div>
+
+    <!-- 聊天区域 -->
+    <div class="chat-container" id="chatContainer"></div>
+
+    <!-- 底部输入 -->
+    <div class="input-bar">
+      <input type="text" class="message-input" id="messageInput" placeholder="输入问题，例如：支出多少">
+      <button class="send-btn" onclick="sendMessage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // ===== 数据 =====
+    let fixedExpenses = [];
+    let largeExpenses = [];
+    let editingExpense = null;
+
+    // ===== 工具：转义用户输入（防止破坏DOM）=====
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    // ===== 格式化金额 =====
+    function formatAmount(amount) {
+      const n = Number(amount) || 0;
+      return 'Rp ' + n.toLocaleString('id-ID');
+    }
+
+    // ===== 初始化 =====
+    function init() {
+      // 从 localStorage 加载数据
+      const savedData = localStorage.getItem('expenseData');
+      if (savedData) {
+        try {
+          const data = JSON.parse(savedData);
+          fixedExpenses = Array.isArray(data.fixedExpenses) ? data.fixedExpenses : [];
+          largeExpenses = Array.isArray(data.largeExpenses) ? data.largeExpenses : [];
+        } catch (e) {
+          fixedExpenses = [];
+          largeExpenses = [];
+        }
+      }
+
+      // 直接显示支出明细
+      showExpenseDetailsInitial();
+    }
+
+    // ===== 跳转到其他功能 =====
+    function jumpToFunction(type) {
+      if (type === 'income') {
+        window.location.href = 'income-management.html';
+      } else if (type === 'bill') {
+        window.location.href = 'add-bill.html';
+      } else if (type === 'analysis') {
+        window.location.href = 'ai-analysis.html';
+      }
+    }
+
+    // ===== 初始显示支出明细（不带用户消息）=====
+    function showExpenseDetailsInitial() {
+      const fixedTotal = fixedExpenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
+      const largeTotal = largeExpenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
+      const total = fixedTotal + largeTotal;
+
+      let html = `
+        <div class="form-card">
+          <div class="form-title">本月支出明细</div>
+          <div class="detail-item total">
+            <div class="detail-label">支出总额</div>
+            <div class="detail-value expense">${formatAmount(total)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">固定支出</div>
+            <div class="detail-value expense">${formatAmount(fixedTotal)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">大额支出</div>
+            <div class="detail-value expense">${formatAmount(largeTotal)}</div>
+          </div>
+        </div>
+      `;
+
+      // 固定支出列表
+      if (fixedExpenses.length > 0) {
+        html += `
+          <div class="divider"></div>
+          <div class="section-header">
+            固定支出
+            <span style="font-size: 13px; font-weight: 400; color: #8A8F99; margin-left: 8px;">（每月会自动计算）</span>
+          </div>
+        `;
+        fixedExpenses.forEach((exp, index) => {
+          html += `
+            <div class="expense-card" data-type="fixed" data-index="${index}">
+              <div class="expense-card-header">
+                <div class="expense-card-title">${escapeHtml(exp.category || '')}</div>
+                <div class="expense-card-amount">${formatAmount(exp.amount)}</div>
+              </div>
+              <div class="expense-card-detail">消费日期：${escapeHtml(exp.date || '')}</div>
+              <div class="expense-card-actions">
+                <button class="expense-card-btn btn-edit" type="button">修改</button>
+                <button class="expense-card-btn btn-delete delete" type="button">删除</button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      // 大额支出列表
+      if (largeExpenses.length > 0) {
+        html += `
+          <div class="divider"></div>
+          <div class="section-header">大额支出</div>
+        `;
+        largeExpenses.forEach((exp, index) => {
+          html += `
+            <div class="expense-card" data-type="large" data-index="${index}">
+              <div class="expense-card-header">
+                <div class="expense-card-title">${escapeHtml(exp.category || '')}</div>
+                <div class="expense-card-amount">${formatAmount(exp.amount)}</div>
+              </div>
+              <div class="expense-card-detail">消费日期：${escapeHtml(exp.date || '')}</div>
+              <div class="expense-card-actions">
+                <button class="expense-card-btn btn-edit" type="button">修改</button>
+                <button class="expense-card-btn btn-delete delete" type="button">删除</button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      // 快捷按钮
+      html += `
+        <div class="divider"></div>
+        <div class="quick-replies" id="initialQuickBtns">
+          <button class="quick-btn primary" id="btnAddFixed" type="button">+ 新增固定支出</button>
+          <button class="quick-btn primary" id="btnAddLarge" type="button">+ 新增大额支出</button>
+        </div>
+      `;
+
+      showAIMessage(html);
+
+      // 绑定按钮事件（确保DOM已渲染）
+      setTimeout(() => {
+        // 固定支出：修改/删除
+        document.querySelectorAll('.expense-card[data-type="fixed"]').forEach(card => {
+          const index = parseInt(card.getAttribute('data-index'), 10);
+          const editBtn = card.querySelector('.btn-edit');
+          const deleteBtn = card.querySelector('.btn-delete');
+          if (editBtn) editBtn.addEventListener('click', () => editFixedExpense(index));
+          if (deleteBtn) deleteBtn.addEventListener('click', () => deleteFixedExpense(index));
+        });
+
+        // 大额支出：修改/删除
+        document.querySelectorAll('.expense-card[data-type="large"]').forEach(card => {
+          const index = parseInt(card.getAttribute('data-index'), 10);
+          const editBtn = card.querySelector('.btn-edit');
+          const deleteBtn = card.querySelector('.btn-delete');
+          if (editBtn) editBtn.addEventListener('click', () => editLargeExpense(index));
+          if (deleteBtn) deleteBtn.addEventListener('click', () => deleteLargeExpense(index));
+        });
+
+        // 快捷按钮
+        const btnAddFixed = document.getElementById('btnAddFixed');
+        const btnAddLarge = document.getElementById('btnAddLarge');
+        if (btnAddFixed) btnAddFixed.addEventListener('click', addFixedExpense);
+        if (btnAddLarge) btnAddLarge.addEventListener('click', addLargeExpense);
+      }, 50);
+    }
+
+    // ===== 显示支出明细（带用户消息）=====
+    function showExpenseDetails() {
+      showUserMessage('查看支出明细');
+      showExpenseDetailsInitial();
+    }
+
+    // ===== 显示固定支出 =====
+    function showFixedExpenses() {
+      showUserMessage('查看固定支出');
+
+      if (fixedExpenses.length === 0) {
+        showAIMessage(
+          '你还没有设置固定支出。设置后，系统会每月自动将固定支出计入你的支出明细。',
+          { buttons: [{ text: '新增固定支出', primary: true, action: () => addFixedExpense() }] }
+        );
+        return;
+      }
+
+      const totalFixed = fixedExpenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
+
+      let html = `
+        <div class="form-card">
+          <div class="form-title">固定支出</div>
+          <div class="detail-item total">
+            <div class="detail-label">固定支出总额</div>
+            <div class="detail-value expense">${formatAmount(totalFixed)}</div>
+          </div>
+        </div>
+        <div class="hint-text" style="margin-bottom: 12px;">💡 系统会每月自动将固定支出计入你的支出明细</div>
+      `;
+
+      fixedExpenses.forEach((exp, index) => {
+        html += `
+          <div class="expense-card" data-type="fixed" data-index="${index}">
+            <div class="expense-card-header">
+              <div class="expense-card-title">${escapeHtml(exp.category || '')}</div>
+              <div class="expense-card-amount">${formatAmount(exp.amount)}</div>
+            </div>
+            <div class="expense-card-detail">消费日期：${escapeHtml(exp.date || '')}</div>
+            <div class="expense-card-actions">
+              <button class="expense-card-btn btn-edit" type="button">修改</button>
+              <button class="expense-card-btn btn-delete delete" type="button">删除</button>
+            </div>
+          </div>
+        `;
+      });
+
+      showAIMessage(html, {
+        buttons: [{ text: '新增固定支出', primary: true, action: () => addFixedExpense() }]
+      });
+
+      setTimeout(() => {
+        document.querySelectorAll('.expense-card[data-type="fixed"]').forEach(card => {
+          const index = parseInt(card.getAttribute('data-index'), 10);
+          const editBtn = card.querySelector('.btn-edit');
+          const deleteBtn = card.querySelector('.btn-delete');
+          if (editBtn) editBtn.addEventListener('click', () => editFixedExpense(index));
+          if (deleteBtn) deleteBtn.addEventListener('click', () => deleteFixedExpense(index));
+        });
+      }, 50);
+    }
+
+    // ===== 显示大额支出 =====
+    function showLargeExpenses() {
+      showUserMessage('查看大额支出');
+
+      if (largeExpenses.length === 0) {
+        showAIMessage(
+          '你还没有记录大额支出。',
+          { buttons: [{ text: '新增大额支出', primary: true, action: () => addLargeExpense() }] }
+        );
+        return;
+      }
+
+      const totalLarge = largeExpenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
+
+      let html = `
+        <div class="form-card">
+          <div class="form-title">大额支出</div>
+          <div class="detail-item total">
+            <div class="detail-label">大额支出总额</div>
+            <div class="detail-value expense">${formatAmount(totalLarge)}</div>
+          </div>
+        </div>
+      `;
+
+      largeExpenses.forEach((exp, index) => {
+        html += `
+          <div class="expense-card" data-type="large" data-index="${index}">
+            <div class="expense-card-header">
+              <div class="expense-card-title">${escapeHtml(exp.category || '')}</div>
+              <div class="expense-card-amount">${formatAmount(exp.amount)}</div>
+            </div>
+            <div class="expense-card-detail">消费日期：${escapeHtml(exp.date || '')}</div>
+            <div class="expense-card-actions">
+              <button class="expense-card-btn btn-edit" type="button">修改</button>
+              <button class="expense-card-btn btn-delete delete" type="button">删除</button>
+            </div>
+          </div>
+        `;
+      });
+
+      showAIMessage(html, {
+        buttons: [{ text: '新增大额支出', primary: true, action: () => addLargeExpense() }]
+      });
+
+      setTimeout(() => {
+        document.querySelectorAll('.expense-card[data-type="large"]').forEach(card => {
+          const index = parseInt(card.getAttribute('data-index'), 10);
+          const editBtn = card.querySelector('.btn-edit');
+          const deleteBtn = card.querySelector('.btn-delete');
+          if (editBtn) editBtn.addEventListener('click', () => editLargeExpense(index));
+          if (deleteBtn) deleteBtn.addEventListener('click', () => deleteLargeExpense(index));
+        });
+      }, 50);
+    }
+
+    // ===== 新增固定支出 =====
+    function addFixedExpense() {
+      const html = `
+        <div class="form-card">
+          <div class="form-title">新增固定支出</div>
+          <div class="hint-text" style="margin-bottom: 16px;">💡 设置后，系统会每月自动将固定支出计入你的支出明细</div>
+
+          <div class="form-group">
+            <label class="form-label">支出类别</label>
+            <input type="text" class="form-input" id="categoryInput" placeholder="例如：房租、水电费">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">金额 (Rp)</label>
+            <input type="number" class="form-input" id="amountInput" placeholder="输入金额">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">消费日期</label>
+            <input type="date" class="form-input" id="dateInput">
+          </div>
+
+          <div class="btn-group">
+            <button class="action-btn btn-secondary" type="button" onclick="closeForm()">取消</button>
+            <button class="action-btn btn-primary" type="button" onclick="confirmAddFixedExpense()">添加</button>
+          </div>
+        </div>
+      `;
+
+      showAIMessage(html);
+
+      setTimeout(() => {
+        const dateInput = document.getElementById('dateInput');
+        if (dateInput) dateInput.valueAsDate = new Date();
+      }, 50);
+    }
+
+    function confirmAddFixedExpense() {
+      const category = (document.getElementById('categoryInput')?.value || '').trim();
+      const amount = parseFloat(document.getElementById('amountInput')?.value || '0') || 0;
+      const date = document.getElementById('dateInput')?.value || '';
+
+      if (!category || amount <= 0 || !date) {
+        alert('请填写完整信息');
+        return;
+      }
+
+      fixedExpenses.push({ category, amount, date });
+      saveData();
+
+      closeForm();
+      showUserMessage(`添加固定支出：${category} ${formatAmount(amount)}`);
+      showAIMessage(
+        `✅ 已成功添加固定支出！<br><br>类别：${escapeHtml(category)}<br>金额：${formatAmount(amount)}<br>消费日期：${escapeHtml(date)}<br><br>💡 系统会每月自动将此支出计入你的支出明细`,
+        { buttons: [{ text: '继续添加', action: () => addFixedExpense() }] }
+      );
+    }
+
+    // ===== 编辑固定支出 =====
+    function editFixedExpense(index) {
+      editingExpense = { type: 'fixed', index };
+      const exp = fixedExpenses[index];
+      if (!exp) return;
+
+      const html = `
+        <div class="form-card">
+          <div class="form-title">修改固定支出</div>
+          <div class="hint-text" style="margin-bottom: 16px;">💡 修改后，系统会按新设置每月自动计算</div>
+
+          <div class="form-group">
+            <label class="form-label">支出类别</label>
+            <input type="text" class="form-input" id="categoryInput" value="${escapeHtml(exp.category || '')}">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">金额 (Rp)</label>
+            <input type="number" class="form-input" id="amountInput" value="${Number(exp.amount) || 0}">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">消费日期</label>
+            <input type="date" class="form-input" id="dateInput" value="${escapeHtml(exp.date || '')}">
+          </div>
+
+          <div class="btn-group">
+            <button class="action-btn btn-secondary" type="button" onclick="closeForm()">取消</button>
+            <button class="action-btn btn-primary" type="button" onclick="confirmEditFixedExpense()">保存</button>
+          </div>
+        </div>
+      `;
+
+      showAIMessage(html);
+    }
+
+    function confirmEditFixedExpense() {
+      if (!editingExpense || editingExpense.type !== 'fixed') return;
+
+      const category = (document.getElementById('categoryInput')?.value || '').trim();
+      const amount = parseFloat(document.getElementById('amountInput')?.value || '0') || 0;
+      const date = document.getElementById('dateInput')?.value || '';
+
+      if (!category || amount <= 0 || !date) {
+        alert('请填写完整信息');
+        return;
+      }
+
+      fixedExpenses[editingExpense.index] = { category, amount, date };
+      saveData();
+      editingExpense = null;
+
+      closeForm();
+      showUserMessage(`更新固定支出：${category}`);
+      showAIMessage(
+        `✅ 已成功更新固定支出！<br><br>类别：${escapeHtml(category)}<br>金额：${formatAmount(amount)}<br>消费日期：${escapeHtml(date)}<br><br>💡 系统会每月按新设置自动计算`
+      );
+    }
+
+    // ===== 删除固定支出 =====
+    function deleteFixedExpense(index) {
+      const exp = fixedExpenses[index];
+      if (!exp) return;
+
+      if (!confirm(`确定要删除固定支出 "${exp.category}" 吗？`)) return;
+
+      fixedExpenses.splice(index, 1);
+      saveData();
+
+      showUserMessage(`删除固定支出：${exp.category}`);
+      setTimeout(() => {
+        showAIMessage(`✅ 已删除固定支出：${escapeHtml(exp.category)}`);
+      }, 200);
+
+      setTimeout(() => showExpenseDetailsInitial(), 800);
+    }
+
+    // ===== 新增大额支出 =====
+    function addLargeExpense() {
+      const html = `
+        <div class="form-card">
+          <div class="form-title">新增大额支出</div>
+
+          <div class="form-group">
+            <label class="form-label">支出类别</label>
+            <input type="text" class="form-input" id="categoryInput" placeholder="例如：购买家电、旅行">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">金额 (Rp)</label>
+            <input type="number" class="form-input" id="amountInput" placeholder="输入金额">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">消费日期</label>
+            <input type="date" class="form-input" id="dateInput">
+          </div>
+
+          <div class="btn-group">
+            <button class="action-btn btn-secondary" type="button" onclick="closeForm()">取消</button>
+            <button class="action-btn btn-primary" type="button" onclick="confirmAddLargeExpense()">添加</button>
+          </div>
+        </div>
+      `;
+
+      showAIMessage(html);
+
+      setTimeout(() => {
+        const dateInput = document.getElementById('dateInput');
+        if (dateInput) dateInput.valueAsDate = new Date();
+      }, 50);
+    }
+
+    function confirmAddLargeExpense() {
+      const category = (document.getElementById('categoryInput')?.value || '').trim();
+      const amount = parseFloat(document.getElementById('amountInput')?.value || '0') || 0;
+      const date = document.getElementById('dateInput')?.value || '';
+
+      if (!category || amount <= 0 || !date) {
+        alert('请填写完整信息');
+        return;
+      }
+
+      largeExpenses.push({ category, amount, date });
+      saveData();
+
+      closeForm();
+      showUserMessage(`添加大额支出：${category} ${formatAmount(amount)}`);
+      showAIMessage(
+        `✅ 已成功添加大额支出！<br><br>类别：${escapeHtml(category)}<br>金额：${formatAmount(amount)}<br>消费日期：${escapeHtml(date)}`,
+        { buttons: [{ text: '继续添加', action: () => addLargeExpense() }] }
+      );
+    }
+
+    // ===== 编辑大额支出 =====
+    function editLargeExpense(index) {
+      editingExpense = { type: 'large', index };
+      const exp = largeExpenses[index];
+      if (!exp) return;
+
+      const html = `
+        <div class="form-card">
+          <div class="form-title">修改大额支出</div>
+
+          <div class="form-group">
+            <label class="form-label">支出类别</label>
+            <input type="text" class="form-input" id="categoryInput" value="${escapeHtml(exp.category || '')}">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">金额 (Rp)</label>
+            <input type="number" class="form-input" id="amountInput" value="${Number(exp.amount) || 0}">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">消费日期</label>
+            <input type="date" class="form-input" id="dateInput" value="${escapeHtml(exp.date || '')}">
+          </div>
+
+          <div class="btn-group">
+            <button class="action-btn btn-secondary" type="button" onclick="closeForm()">取消</button>
+            <button class="action-btn btn-primary" type="button" onclick="confirmEditLargeExpense()">保存</button>
+          </div>
+        </div>
+      `;
+
+      showAIMessage(html);
+    }
+
+    function confirmEditLargeExpense() {
+      if (!editingExpense || editingExpense.type !== 'large') return;
+
+      const category = (document.getElementById('categoryInput')?.value || '').trim();
+      const amount = parseFloat(document.getElementById('amountInput')?.value || '0') || 0;
+      const date = document.getElementById('dateInput')?.value || '';
+
+      if (!category || amount <= 0 || !date) {
+        alert('请填写完整信息');
+        return;
+      }
+
+      largeExpenses[editingExpense.index] = { category, amount, date };
+      saveData();
+      editingExpense = null;
+
+      closeForm();
+      showUserMessage(`更新大额支出：${category}`);
+      showAIMessage(`✅ 已成功更新大额支出！<br><br>类别：${escapeHtml(category)}<br>金额：${formatAmount(amount)}<br>消费日期：${escapeHtml(date)}`);
+    }
+
+    // ===== 删除大额支出 =====
+    function deleteLargeExpense(index) {
+      const exp = largeExpenses[index];
+      if (!exp) return;
+
+      if (!confirm(`确定要删除大额支出 "${exp.category}" 吗？`)) return;
+
+      largeExpenses.splice(index, 1);
+      saveData();
+
+      showUserMessage(`删除大额支出：${exp.category}`);
+      setTimeout(() => {
+        showAIMessage(`✅ 已删除大额支出：${escapeHtml(exp.category)}`);
+      }, 200);
+
+      setTimeout(() => showExpenseDetailsInitial(), 800);
+    }
+
+    // ===== 关闭表单（移除最后一条AI消息）=====
+    function closeForm() {
+      const chatContainer = document.getElementById('chatContainer');
+      const lastMessage = chatContainer.querySelector('.message:last-child');
+      if (lastMessage && lastMessage.classList.contains('ai')) {
+        lastMessage.remove();
+      }
+    }
+
+    // ===== 显示用户消息 =====
+    function showUserMessage(text) {
+      const chatContainer = document.getElementById('chatContainer');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message user';
+      messageDiv.innerHTML = `
+        <div class="avatar user">我</div>
+        <div class="message-content">
+          <div class="message-text">${escapeHtml(text)}</div>
+        </div>
+      `;
+      chatContainer.appendChild(messageDiv);
+      scrollToBottom();
+    }
+
+    // ===== 显示AI消息（可选带按钮）=====
+    function showAIMessage(html, options = {}) {
+      const chatContainer = document.getElementById('chatContainer');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message ai';
+
+      let content = `
+        <div class="avatar ai">AI</div>
+        <div class="message-content">
+          <div class="message-text">${html}</div>
+      `;
+
+      if (options.buttons && Array.isArray(options.buttons) && options.buttons.length > 0) {
+        content += `<div class="quick-replies">`;
+        options.buttons.forEach(btn => {
+          const btnClass = btn.primary ? 'quick-btn primary' : 'quick-btn';
+          content += `<button class="${btnClass}" type="button">${escapeHtml(btn.text)}</button>`;
+        });
+        content += `</div>`;
+      }
+
+      content += `</div>`;
+      messageDiv.innerHTML = content;
+
+      // 绑定按钮事件
+      if (options.buttons && Array.isArray(options.buttons) && options.buttons.length > 0) {
+        const buttons = messageDiv.querySelectorAll('.quick-btn');
+        buttons.forEach((el, idx) => {
+          const cfg = options.buttons[idx];
+          if (cfg && typeof cfg.action === 'function') {
+            el.addEventListener('click', cfg.action);
+          }
+        });
+      }
+
+      chatContainer.appendChild(messageDiv);
+      scrollToBottom();
+    }
+
+    // ===== 发送消息 =====
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const message = (input?.value || '').trim();
+      if (!message) return;
+
+      showUserMessage(message);
+      input.value = '';
+
+      setTimeout(() => processUserMessage(message), 250);
+    }
+
+    // ===== 处理用户消息 =====
+    function processUserMessage(message) {
+      const lowerMessage = message.toLowerCase();
+
+      if (lowerMessage.includes('支出') && (lowerMessage.includes('多少') || lowerMessage.includes('总计') || lowerMessage.includes('总额') || lowerMessage.includes('总'))) {
+        showExpenseDetails();
+      } else if (lowerMessage.includes('固定') && lowerMessage.includes('支出')) {
+        showFixedExpenses();
+      } else if ((lowerMessage.includes('大额') || lowerMessage.includes('大笔')) && lowerMessage.includes('支出')) {
+        showLargeExpenses();
+      } else if (lowerMessage.includes('结余')) {
+        showUserMessage('查看结余');
+        showAIMessage('结余是指收入减去支出后的剩余金额。请在“收入管理”中查看你的结余情况。');
+      } else if (lowerMessage.includes('帮助') || lowerMessage.includes('怎么') || lowerMessage.includes('如何')) {
+        showAIMessage(
+          `我可以帮你管理支出！你可以问我或点击按钮：<br><br>
+           • “支出多少” - 查看支出总额<br>
+           • “固定支出” - 查看固定支出明细<br>
+           • “大额支出” - 查看大额支出明细`,
+          {
+            buttons: [
+              { text: '查看支出明细', primary: true, action: () => showExpenseDetails() },
+              { text: '固定支出', action: () => showFixedExpenses() },
+              { text: '大额支出', action: () => showLargeExpenses() }
+            ]
+          }
+        );
+      } else {
+        showAIMessage(
+          `我收到了你的消息！你可以问我关于支出的问题，例如：支出多少？固定支出？大额支出？`,
+          {
+            buttons: [
+              { text: '查看支出明细', primary: true, action: () => showExpenseDetails() },
+              { text: '固定支出', action: () => showFixedExpenses() },
+              { text: '大额支出', action: () => showLargeExpenses() }
+            ]
+          }
+        );
+      }
+    }
+
+    // ===== 保存数据 =====
+    function saveData() {
+      const data = { fixedExpenses, largeExpenses };
+      localStorage.setItem('expenseData', JSON.stringify(data));
+    }
+
+    // ===== 滚动到底部 =====
+    function scrollToBottom() {
+      const chatContainer = document.getElementById('chatContainer');
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // ===== 回到首页 =====
+    function goBack() {
+      localStorage.setItem('expenseStepCompleted', 'true');
+      window.location.href = 'index-new.html';
+    }
+
+    // ===== 回车发送 =====
+    document.getElementById('messageInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    // ===== 初始化运行 =====
+    init();
+
+    // ===== 挂载到 window（以便HTML onclick使用）=====
+    window.showExpenseDetails = showExpenseDetails;
+    window.showExpenseDetailsInitial = showExpenseDetailsInitial;
+    window.showFixedExpenses = showFixedExpenses;
+    window.showLargeExpenses = showLargeExpenses;
+    window.addFixedExpense = addFixedExpense;
+    window.confirmAddFixedExpense = confirmAddFixedExpense;
+    window.editFixedExpense = editFixedExpense;
+    window.confirmEditFixedExpense = confirmEditFixedExpense;
+    window.deleteFixedExpense = deleteFixedExpense;
+    window.addLargeExpense = addLargeExpense;
+    window.confirmAddLargeExpense = confirmAddLargeExpense;
+    window.editLargeExpense = editLargeExpense;
+    window.confirmEditLargeExpense = confirmEditLargeExpense;
+    window.deleteLargeExpense = deleteLargeExpense;
+    window.closeForm = closeForm;
+  </script>
+</body>
+</html>
+

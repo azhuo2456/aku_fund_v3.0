@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>欢迎使用 AI 还款助手 - Akulaku</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background-color: #FFFFFF;
+            min-height: 100vh;
+            color: #1F2D3D;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 430px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            justify-content: center;
+            min-height: calc(100vh - 120px); /* 为底部免责声明留出空间 */
+        }
+
+        /* 顶部品牌区 */
+        .brand-section {
+            position: absolute;
+            top: 48px;
+            text-align: center;
+        }
+
+        .logo {
+            width: 120px;
+            height: 40px;
+            margin-bottom: 12px;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTIwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBkPSJNMTEuOTk4IDkuNUg4LjAxN0M0LjUzNyA5LjUgMS41IDEyLjAzNyAxLjUgMTUuNSAwIDIwLjQ2MyAyLjk0MiAyNC41IDEuNSAyOC41QzEuNSAyOS43NzMgMi4yMjcgMzAuODU3IDMuNDQ4IDMxLjVDNC42NzkgMzIuMTQzIDYuMDk5IDMyLjUgNy41IDMyLjVTMTQuNSAzMi41IDE2LjUgMzJUMjQuNSAzMi41IDI3LjUgMzIuNUMzMC41IDMyLjUgMzIuNTY3IDMxLjgzMyAzMy42ODIgMzAuNUM0NC44MDggMjkuMjE3IDQ1LjUgMjUuMjYzIDQ1LjUgMjAuNUM0NS41IDEyLjAzNyA0Mi41MzcgOS41IDM5Ljk4IDkuNUgxMS45OThaIiBmaWxsPSIjRUIzMjIzIi8+CjxwYXRoIGQ9Ik0zOS45OCAxMC41SDguMDE3QzQuNTM3IDEwLjUgMS41IDEzLjAzNyAxLjUgMTYuNSAwIDIxLjQ2MyAyLjk0MiAyNS41IDEuNSAyOS41QzEuNSA0MC4yNzMgMi4yMjcgNDEuODU3IDMuNDQ4IDQyLjVDNC42NzkgNDMuMTQzIDYuMDk5IDQzLjUgNy41IDQzLjVTMTQuNSAzLjUgMTYuNSA0My41TDI0LjUgNDMuNSAyNy41IDQzLjVDMzAuNSAzLjUgMzIuNTY3IDQyLjgzMyAzMy42ODIgNDEuNUM0NC44MDggMzcuNzgyIDQ1LjUgMzMuNzM3IDQ1LjUgMjguNUM0NS41IDIwLjAzNyA0Mi41MzcgMTcuNSAzOS45OCAxNy41WiIgZmlsbD0iI0Y4QjQ0QiIvPgo8cGF0aCBkPSJNMjAuNSAyNi41QzIwLjUgMjguNzczIDIxLjIyNyAzMC4yNSAyMi40NDggMzAuNzVDMjMuNjc5IDMxLjE0MyAyNS4wOTkgMzEuNSAyNi41IDMxLjVTMTkuNSAxOS41IDI2LjUgMTMuNVoiIGZpbGw9IiM5QjI5OUYiLz4KPHA+YXRoIGQ9Ik0zMy41IDI2LjVDMzMuNSAyOC43NzMgMzQuMjI3IDMwLjI1IDM1LjQ0OCAzMC43NUMzNi42NzkgMzEuMTQzIDM4LjA5OSAzMS41IDM5LjUgMzEuNVMyNS41IDI5LjI2MyAzNS41IDI3LjVDMzUuNSAyNS4yNjMgMzQuNTM3IDIzLjAzNyAzMy4xOTggMjEuN0MzMi45NDggMjEuNDE3IDMyLjUgMjAuNzEzIDMyLjUgMjBDMzIuNSAxNi42NTYgMzAuMzQ0IDEzLjUgMjguNSA5LjVaIiBmaWxsPSIjRkY4QjRCIi8+Cjwvc3ZnPgo=');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+        }
+
+        .brand-title {
+            font-size: 20px;
+            font-weight: 500;
+            color: #1F2D3D;
+            letter-spacing: 0.5px;
+        }
+
+        /* 主视觉与标题区域 */
+        .hero-section {
+            text-align: center;
+            margin-bottom: 24px;
+            width: 100%;
+        }
+
+        .main-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1F2D3D;
+            line-height: 1.2;
+            margin-bottom: 12px;
+            max-width: 350px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            font-weight: 400;
+            color: #8A8F99;
+            line-height: 1.4;
+            text-align: center;
+            max-width: 320px;
+            margin: 0 auto 24px auto;
+        }
+
+        /* 功能点说明区 */
+        .features-section {
+            margin: 0 auto 32px auto;
+            text-align: center;
+            width: 100%;
+            max-width: 280px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 12px;
+            font-size: 14px;
+            font-weight: 400;
+            color: #8A8F99;
+            text-align: left;
+        }
+
+        .feature-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            flex-shrink: 0;
+            opacity: 0.6;
+        }
+
+        .feature-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: #8A8F99;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        /* 主行动按钮 */
+        .cta-section {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .start-btn {
+            width: 80%;
+            height: 48px;
+            background: #EB3223;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .start-btn:hover {
+            background: #CC0000;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(235, 50, 35, 0.3);
+        }
+
+        /* 底部说明文字 */
+        .disclaimer {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 430px;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .disclaimer-text {
+            font-size: 12px;
+            font-weight: 400;
+            color: #8A8F99;
+            line-height: 1.4;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 480px) {
+            .main-title {
+                font-size: 28px;
+            }
+
+            .subtitle {
+                font-size: 15px;
+            }
+
+            .brand-title {
+                font-size: 18px;
+            }
+
+            .start-btn {
+                width: 85%;
+                font-size: 15px;
+            }
+
+            .container {
+                padding: 0 16px;
+            }
+        }
+
+        @media (max-height: 700px) {
+            .brand-section {
+                top: 32px;
+            }
+        }
+
+        @media (max-height: 650px) {
+            .brand-section {
+                top: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 主视觉与标题区域 -->
+        <section class="hero-section">
+            <h1 class="main-title">用 AI 帮你管理所有借款</h1>
+            <p class="subtitle">整合多个平台的账单信息，<br>生成清晰的分析与还款计划</p>
+        </section>
+
+        <!-- 功能点说明区 -->
+        <section class="features-section">
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24">
+                        <polyline points="9 11 12 14 22 4"></polyline>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                </div>
+                <span>支持多个借款平台</span>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                </div>
+                <span>自动识别账单截图</span>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                </div>
+                <span>智能生成还款建议</span>
+            </div>
+        </section>
+
+        <!-- 主行动按钮 -->
+        <section class="cta-section">
+            <button class="start-btn" onclick="handleStart()">开始使用</button>
+        </section>
+    </div>
+
+    <!-- 顶部品牌区 -->
+    <section class="brand-section">
+        <div class="logo"></div>
+        <div class="brand-title">AI 还款助手</div>
+    </section>
+
+    <!-- 底部说明文字 -->
+    <footer class="disclaimer">
+        <p class="disclaimer-text">本功能为智能辅助工具，<br>所提供内容仅供参考，不构成财务或法律承诺。</p>
+    </footer>
+
+    <script>
+        function handleStart() {
+            // 跳转到AI统一助手页面
+            window.location.href = 'ai-assistant-unified.html';
+        }
+
+        // 页面加载完成后自动聚焦按钮（可选）
+        document.addEventListener('DOMContentLoaded', function() {
+            const startBtn = document.querySelector('.start-btn');
+            startBtn.focus();
+        });
+    </script>
+</body>
+</html>
